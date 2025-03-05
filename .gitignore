@@ -1,0 +1,73 @@
+#Java & Quarkus
+target/
+*.class
+*.jar
+*.war
+*.ear
+
+#IDE & Éditeurs
+*.iml
+.idea/
+*.vscode/
+*.swp
+*.swo
+
+#Configuration & Logs
+*.log
+logs/
+*.tmp
+
+#Dépendances & Build
+.mvn/
+node_modules/
+dist/
+build/
+bin/
+
+#OS spécifiques
+.DS_Store
+Thumbs.db
+
+#Credentials & Environnements (NE JAMAIS PUSHER CES FICHIERS !)
+.env
+*.env.local
+secrets/
+config/secrets.yml
+
+#Docker
+docker-compose.override.yml
+.dockerignore
+
+#Kubernetes
+infra/kustomization.build.yaml
+infra/.kube/
+
+#IntelliJ / Eclipse / VSCode
+*.ipr
+*.iws
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+#GitHub Actions / GitLab CI cache
+.github/workflows/*.log
+.gitlab-ci.yml.cache
+
+#NoSQL (MongoDB, ElasticSearch, Neo4j)
+data/
+dump.rdb
+*.db
+neo4j/data/
+neo4j/logs/
+elasticsearch/data/
+
+#Redis
+dump.rdb
+redis-data/
+
+#Test et Coverage
+test-output/
+coverage/
+jacoco.exec
+*.cover
