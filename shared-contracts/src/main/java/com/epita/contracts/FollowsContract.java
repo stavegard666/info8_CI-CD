@@ -1,4 +1,4 @@
-package com.epita.controller.contracts;
+package com.epita.contracts;
 
 import java.sql.Date;
 import java.util.UUID;

@@ -13,6 +13,7 @@
     <module>srvc-search</module>
     <module>srvc-user-timeline</module>
     <module>srvc-home-timeline</module>
+    <module>shared-contracts</module>
   </modules>
   <properties>
     <compiler-plugin.version>3.11.0</compiler-plugin.version>

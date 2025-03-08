@@ -1,17 +1,17 @@
-package com.epita.controller.contracts;
+package com.epita.contracts;
 
 import java.util.Dictionary;
 import java.util.List;
 import java.util.UUID;
 
-public class UserTimelineContract {
+public class HomeTimelineContract {
     private UUID userId;
     private List<Dictionary<String, Object>> posts;
 
-    public UserTimelineContract() {
+    public HomeTimelineContract() {
     }
 
-    public UserTimelineContract(UUID userId, List<Dictionary<String, Object>> posts) {
+    public HomeTimelineContract(UUID userId, List<Dictionary<String, Object>> posts) {
         this.userId = userId;
         this.posts = posts;
     }
