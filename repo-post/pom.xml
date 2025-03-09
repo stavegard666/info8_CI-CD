@@ -28,25 +28,5 @@
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-rest-client-reactive-jackson</artifactId>
     </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-container-image-jib</artifactId>
-    </dependency>
   </dependencies>
-
-
-  <build>
-        <plugins>
-            <plugin>
-                <groupId>com.google.cloud.tools</groupId>
-                <artifactId>jib-maven-plugin</artifactId>
-                <version>3.1.4</version>
-                <configuration>
-                    <from>
-                        <image>gcr.io/distroless/java</image>
-                    </from>
-                </configuration>
-            </plugin>
-        </plugins>
-  </build>
 </project>

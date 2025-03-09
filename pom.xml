@@ -69,7 +69,7 @@
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-mongodb-client</artifactId>
+      <artifactId>quarkus-mongodb-panache</artifactId>
     </dependency>
   </dependencies>
   <build>

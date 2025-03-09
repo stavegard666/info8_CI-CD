@@ -1,18 +1,25 @@
 package com.epita.contracts;
 
-import java.sql.Date;
+import java.time.Instant;
 import java.util.UUID;
 
+import org.bson.codecs.pojo.annotations.BsonProperty;
+
+import io.quarkus.mongodb.panache.common.MongoEntity;
+
+@MongoEntity(collection="users")
 public class UsersContract {
+    
+    @BsonProperty("_id")
     private UUID userId;
     private String userName;
-    private Date birthDate;
+    private Instant birthDate;
     private String location;
 
     public UsersContract() {
     }
 
-    public UsersContract(UUID userId, String userName, Date birthDate, String location) {
+    public UsersContract(UUID userId, String userName, Instant birthDate, String location) {
         this.userId = userId;
         this.userName = userName;
         this.birthDate = birthDate;
@@ -35,11 +42,11 @@ public class UsersContract {
         this.userName = userName;
     }
 
-    public Date getBirthDate() {
+    public Instant getBirthDate() {
         return birthDate;
     }
 
-    public void setBirthDate(Date birthDate) {
+    public void setBirthDate(Instant birthDate) {
         this.birthDate = birthDate;
     }
 
