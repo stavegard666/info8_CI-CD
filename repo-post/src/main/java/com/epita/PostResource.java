@@ -1,5 +1,6 @@
 package com.epita;
 
+import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -56,7 +57,7 @@ public class PostResource {
             contract.setPostId(UUID.randomUUID());
         }
         if (contract.getCreatedAt() == null) {
-            contract.setCreatedAt(new Date());
+            contract.setCreatedAt(Instant.now());
         }
         
         if (contract.getAuthorId() == null || userRepository.find("authorId", contract.getAuthorId()) == null) {

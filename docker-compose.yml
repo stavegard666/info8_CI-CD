@@ -8,6 +8,9 @@ services:
       - "27017:27017"
     volumes:
       - mongo-data:/data/db
+      - ./scripts/init_db.js:/docker-entrypoint-initdb.d/init_db.js:ro
+    environment:
+      - MONGO_INITDB_DATABASE=tinyX
     networks:
       - tinyx-network
 
