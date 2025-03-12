@@ -101,7 +101,19 @@ jobs:
         path: k8s-deploy/output
     
     - name: Run Maven with tests
-      run: mvn clean package
+      id: run-tests
+      continue-on-error: true
+      run: |
+        mvn clean package
+        echo "MAVEN_EXIT_CODE=$?" >> $GITHUB_ENV
+
+    - name: Check test results
+      if: always()
+      run: |
+        if [ "${{ env.MAVEN_EXIT_CODE }}" != "0" ]; then
+          echo "::error::Run Maven with tests failed with exit code ${{ env.MAVEN_EXIT_CODE }}"
+          exit 1
+        fi
       
   create-exes:
     needs: build
