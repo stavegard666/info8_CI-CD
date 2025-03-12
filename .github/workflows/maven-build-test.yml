@@ -9,7 +9,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
+    outputs:
+      maven_exit_code: ${{ steps.run-tests.outputs.maven_exit_code }}
+    
     steps:
     - uses: actions/checkout@v4
     
@@ -105,15 +107,7 @@ jobs:
       continue-on-error: true
       run: |
         mvn clean package
-        echo "MAVEN_EXIT_CODE=$?" >> $GITHUB_ENV
-
-    - name: Check test results
-      if: always()
-      run: |
-        if [ "${{ env.MAVEN_EXIT_CODE }}" != "0" ]; then
-          echo "::error::Run Maven with tests failed with exit code ${{ env.MAVEN_EXIT_CODE }}"
-          exit 1
-        fi
+        echo "maven_exit_code=$?" >> $GITHUB_OUTPUT
       
   create-exes:
     needs: build
@@ -198,3 +192,14 @@ jobs:
           executable-build/output
           executable-build/JarRunner.zip
           executable-build/installer/*.exe
+          
+    - name: Check test results
+      if: always()
+      shell: bash
+      run: |
+        if [ "${{ needs.build.outputs.maven_exit_code }}" != "0" ]; then
+          echo "::error::Run Maven with tests failed with exit code ${{ needs.build.outputs.maven_exit_code }}"
+          exit 1
+        else
+          echo "All Maven tests passed successfully!"
+        fi
