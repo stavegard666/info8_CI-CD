@@ -1,0 +1,6 @@
+question qu'on se pose :
+
+CreatePost:
+- si le mec qui repost a bloqué le mec du post ou dans l'autre sens, faut-il interdir le post ??
+- on interdit de poster lorsque content est vide pourtant le sujet dit : """User can create a post: Post can contain text, a media, a repost""" !!!
+
