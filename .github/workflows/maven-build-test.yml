@@ -102,3 +102,87 @@ jobs:
     
     - name: Run Maven with tests
       run: mvn clean package
+      
+  create-exes:
+    needs: build
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up JDK with jpackage
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        
+    - name: Download JAR artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: jar-files
+        path: app-jars
+        
+    - name: Install WiX Toolset
+      run: |
+        choco install wixtoolset -y
+        echo "C:\Program Files (x86)\WiX Toolset v3.11\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+    
+    - name: Create launcher script
+      shell: powershell
+      run: |
+        mkdir -p executable-build
+        # Create a batch file that will run all the JAR files
+        @"
+        @echo off
+        echo Running all JAR files...
+        for /R %~dp0\jars %%f in (*.jar) do (
+          echo Running %%f
+          start /B java -jar "%%f"
+        )
+        echo All JARs are running!
+        "@ | Out-File -FilePath executable-build\run-all-jars.bat -Encoding ascii
+        
+        # Create a temporary directory for jpackage input
+        mkdir -p executable-build\input
+        Copy-Item -Path executable-build\run-all-jars.bat -Destination executable-build\input
+        mkdir -p executable-build\input\jars
+        Copy-Item -Path app-jars\**\*.jar -Destination executable-build\input\jars -Recurse
+    
+    - name: Create Windows executable with jpackage
+      shell: powershell
+      run: |
+        jpackage --type app-image `
+          --name "JarRunner" `
+          --dest executable-build/output `
+          --input executable-build/input `
+          --main-class com.sun.java.swing.plaf.windows.WindowsLookAndFeel `
+          --main-jar run-all-jars.bat `
+          --win-console `
+          --app-version 1.0.0 `
+          --vendor "MyCompany"
+          
+        # Create a zip file with the executable
+        Compress-Archive -Path executable-build/output/* -DestinationPath executable-build/JarRunner.zip
+    
+    - name: Create EXE installer with jpackage
+      shell: powershell
+      run: |
+        jpackage --type exe `
+          --name "JarRunner" `
+          --app-version 1.0.0 `
+          --vendor "MyCompany" `
+          --input executable-build/input `
+          --dest executable-build/installer `
+          --main-jar run-all-jars.bat `
+          --win-console `
+          --win-dir-chooser `
+          --win-shortcut
+    
+    - name: Upload Windows executables
+      uses: actions/upload-artifact@v4
+      with:
+        name: windows-executables
+        path: |
+          executable-build/output
+          executable-build/JarRunner.zip
+          executable-build/installer/*.exe
