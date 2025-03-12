@@ -102,6 +102,45 @@ jobs:
         name: kubernetes-manifests
         path: k8s-deploy/output
     
+    - name: Create launcher script for Linux
+      run: |
+        mkdir -p deb-build/input
+        mkdir -p deb-build/input/jars
+        
+        # Create a shell script that will run all the JAR files
+        cat > deb-build/input/run-all-jars.sh << 'EOF'
+        #!/bin/bash
+        echo "Running all JAR files..."
+        for jar in $(find $(dirname "$0")/jars -name "*.jar"); do
+          echo "Running $jar"
+          java -jar "$jar" &
+        done
+        echo "All JARs are running!"
+        wait
+        EOF
+        
+        chmod +x deb-build/input/run-all-jars.sh
+        cp -r app-jars/**/*.jar deb-build/input/jars/ || true
+        
+    - name: Create Debian package with jpackage
+      run: |
+        mkdir -p deb-build/output
+        jpackage --type deb \
+          --name "JarRunner" \
+          --app-version "1.0.0" \
+          --vendor "MyCompany" \
+          --input deb-build/input \
+          --dest deb-build/output \
+          --main-jar run-all-jars.sh \
+          --linux-app-category "development" \
+          --linux-shortcut
+          
+    - name: Upload Debian package
+      uses: actions/upload-artifact@v4
+      with:
+        name: debian-package
+        path: deb-build/output/*.deb
+    
     - name: Run Maven with tests
       id: run-tests
       continue-on-error: true
@@ -133,26 +172,96 @@ jobs:
         choco install wixtoolset -y
         echo "C:\Program Files (x86)\WiX Toolset v3.11\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
     
-    - name: Create launcher script
+    - name: Create Java launcher for Windows
       shell: powershell
       run: |
-        mkdir -p executable-build
-        # Create a batch file that will run all the JAR files
-        @"
-        @echo off
-        echo Running all JAR files...
-        for /R %~dp0\jars %%f in (*.jar) do (
-          echo Running %%f
-          start /B java -jar "%%f"
-        )
-        echo All JARs are running!
-        "@ | Out-File -FilePath executable-build\run-all-jars.bat -Encoding ascii
+        # Create directory structure
+        mkdir -p executable-build/launcher/src/main/java/com/mycompany
+        mkdir -p executable-build/input/jars
         
-        # Create a temporary directory for jpackage input
-        mkdir -p executable-build\input
-        Copy-Item -Path executable-build\run-all-jars.bat -Destination executable-build\input
-        mkdir -p executable-build\input\jars
-        Copy-Item -Path app-jars\**\*.jar -Destination executable-build\input\jars -Recurse
+        # Create Java launcher program
+        @"
+package com.mycompany;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
+public class JarLauncher {
+    public static void main(String[] args) {
+        try {
+            System.out.println("Starting JAR runner...");
+            
+            // Get application directory
+            String appDir = System.getProperty("app.dir");
+            if (appDir == null) {
+                appDir = new File(JarLauncher.class.getProtectionDomain()
+                    .getCodeSource().getLocation().toURI()).getParent();
+            }
+            
+            System.out.println("Application directory: " + appDir);
+            
+            // Find and run all JAR files
+            File jarsDir = new File(appDir + File.separator + "jars");
+            if (jarsDir.exists() && jarsDir.isDirectory()) {
+                System.out.println("Found jars directory: " + jarsDir.getAbsolutePath());
+                findAndRunJars(jarsDir);
+            } else {
+                System.err.println("Jars directory not found at: " + jarsDir.getAbsolutePath());
+            }
+            
+            System.out.println("All JARs have been started!");
+            
+            // Keep the application running
+            Thread.sleep(Long.MAX_VALUE);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    
+    private static void findAndRunJars(File directory) throws IOException {
+        File[] files = directory.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                if (file.isDirectory()) {
+                    findAndRunJars(file);
+                } else if (file.getName().toLowerCase().endsWith(".jar")) {
+                    runJar(file.getAbsolutePath());
+                }
+            }
+        }
+    }
+    
+    private static void runJar(String jarPath) throws IOException {
+        System.out.println("Running JAR: " + jarPath);
+        ProcessBuilder pb = new ProcessBuilder(
+            "java", "-jar", jarPath
+        );
+        pb.inheritIO();
+        Process process = pb.start();
+    }
+}
+"@ | Out-File -FilePath executable-build/launcher/src/main/java/com/mycompany/JarLauncher.java -Encoding utf8
+        
+        # Compile the Java file
+        $env:JAVA_HOME = "${{ env.JAVA_HOME }}"
+        javac executable-build/launcher/src/main/java/com/mycompany/JarLauncher.java
+        
+        # Create manifest file
+        @"
+Manifest-Version: 1.0
+Main-Class: com.mycompany.JarLauncher
+"@ | Out-File -FilePath executable-build/launcher/MANIFEST.MF -Encoding ascii
+        
+        # Create JAR file
+        Push-Location executable-build/launcher
+        jar cvfm launcher.jar MANIFEST.MF src/main/java/com/mycompany/JarLauncher.class
+        Pop-Location
+        
+        # Copy files to input directory
+        Copy-Item -Path executable-build/launcher/launcher.jar -Destination executable-build/input/
+        Copy-Item -Path app-jars/**/*.jar -Destination executable-build/input/jars/ -Recurse
     
     - name: Create Windows executable with jpackage
       shell: powershell
@@ -161,8 +270,7 @@ jobs:
           --name "JarRunner" `
           --dest executable-build/output `
           --input executable-build/input `
-          --main-class com.sun.java.swing.plaf.windows.WindowsLookAndFeel `
-          --main-jar run-all-jars.bat `
+          --main-jar launcher.jar `
           --win-console `
           --app-version 1.0.0 `
           --vendor "MyCompany"
@@ -179,7 +287,7 @@ jobs:
           --vendor "MyCompany" `
           --input executable-build/input `
           --dest executable-build/installer `
-          --main-jar run-all-jars.bat `
+          --main-jar launcher.jar `
           --win-console `
           --win-dir-chooser `
           --win-shortcut

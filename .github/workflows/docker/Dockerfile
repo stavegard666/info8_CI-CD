@@ -8,10 +8,11 @@ COPY ${JARS_DIR}/ /app/jars/
 
 # Create a script to execute all JARs
 RUN echo '#!/bin/sh' > /app/run-all-jars.sh && \
-    echo 'for jar in /app/jars/**/*.jar; do' >> /app/run-all-jars.sh && \
+    echo 'for jar in $(find /app/jars -name "*.jar"); do' >> /app/run-all-jars.sh && \
     echo '  echo "Running $jar..."' >> /app/run-all-jars.sh && \
     echo '  java -jar "$jar" &' >> /app/run-all-jars.sh && \
     echo 'done' >> /app/run-all-jars.sh && \
+    echo 'echo "All JARs are now running"' >> /app/run-all-jars.sh && \
     echo 'wait' >> /app/run-all-jars.sh && \
     chmod +x /app/run-all-jars.sh
 
