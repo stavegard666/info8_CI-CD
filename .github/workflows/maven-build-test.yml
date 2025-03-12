@@ -1,0 +1,35 @@
+name: Maven Build and Test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: Set up JDK
+      uses: actions/setup-java@v2
+      with:
+        java-version: '11'
+        distribution: 'temurin'
+        
+    - name: Build with Maven (skip tests)
+      run: mvn clean package -DskipTests
+    
+    - name: Upload JAR files
+      uses: actions/upload-artifact@v2
+      with:
+        name: jar-files
+        path: |
+          **/target/*.jar
+          !**/target/lib/*.jar
+          !**/target/original-*.jar
+    
+    - name: Run Maven with tests
+      run: mvn clean package
