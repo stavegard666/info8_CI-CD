@@ -1,3 +1,16 @@
+package com.epita.service;
+
+import com.epita.contracts.PostsContract;
+import com.epita.repository.PostRepository;
+import com.epita.repository.UserRepository;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
+import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
+
 @ApplicationScoped
 public class PostService {
 
