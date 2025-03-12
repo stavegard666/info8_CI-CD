@@ -31,5 +31,74 @@ jobs:
           !**/target/lib/*.jar
           !**/target/original-*.jar
     
+    - name: Download JAR artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: jar-files
+        path: app-jars
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+    
+    - name: Build Docker image with JARs
+      uses: docker/build-push-action@v4
+      with:
+        context: .
+        push: false
+        tags: app-runner:latest
+        build-args: |
+          JARS_DIR=app-jars
+        outputs: type=docker,dest=/tmp/app-runner.tar
+        file: .github/workflows/docker/Dockerfile
+    
+    - name: Install Kustomize
+      run: |
+        curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
+        sudo mv kustomize /usr/local/bin/
+    
+    - name: Generate Kubernetes manifests
+      run: |
+        mkdir -p k8s-deploy/base
+        
+        # Create deployment manifest
+        cat > k8s-deploy/base/deployment.yaml << 'EOF'
+        apiVersion: apps/v1
+        kind: Deployment
+        metadata:
+          name: app-runner
+        spec:
+          replicas: 1
+          selector:
+            matchLabels:
+              app: app-runner
+          template:
+            metadata:
+              labels:
+                app: app-runner
+            spec:
+              containers:
+              - name: app-runner
+                image: app-runner:latest
+                imagePullPolicy: IfNotPresent
+        EOF
+        
+        # Create kustomization file
+        cat > k8s-deploy/base/kustomization.yaml << 'EOF'
+        apiVersion: kustomize.config.k8s.io/v1beta1
+        kind: Kustomization
+        resources:
+        - deployment.yaml
+        EOF
+        
+        # Generate final manifests
+        mkdir -p k8s-deploy/output
+        kustomize build k8s-deploy/base > k8s-deploy/output/kubernetes-manifests.yaml
+    
+    - name: Upload Kubernetes manifests
+      uses: actions/upload-artifact@v4
+      with:
+        name: kubernetes-manifests
+        path: k8s-deploy/output
+    
     - name: Run Maven with tests
       run: mvn clean package
