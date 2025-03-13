@@ -55,3 +55,26 @@ L'application est composée de plusieurs **microservices** indépendants qui com
 
 
 ---
+
+## 🚀 Installation & Exécution
+
+### **1️⃣ Build du projet**
+À la racine du projet, exécutez la commande suivante pour compiler tous les microservices sans exécuter les tests :
+```bash
+mvn clean install -DskipTests
+```
+
+### **2️⃣ Démarrer MongoDB uniquement**
+Si vous souhaitez uniquement lancer la base de données MongoDB avec Docker Compose :
+```bash
+docker compose up mongodb
+```
+
+### **3️⃣ Lancer un microservice en mode développement**
+Accédez au dossier du microservice que vous souhaitez exécuter (ex: `repo-post`) et lancez :
+```bash
+mvn quarkus:dev
+```
+Cela démarre le microservice en mode développement avec **hot reload**.
+
+---
