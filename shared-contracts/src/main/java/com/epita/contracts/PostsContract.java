@@ -1,27 +1,32 @@
 package com.epita.contracts;
 
-import java.util.Date;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
+import org.bson.codecs.pojo.annotations.BsonProperty;
+
+import io.quarkus.mongodb.panache.common.MongoEntity;
+
+@MongoEntity(collection="posts")
 public class PostsContract {
+
+    @BsonProperty("_id")
     private UUID postId;
     private UUID authorId;
-    private UUID userId;
     private String content;
     private List<String> hashtags;
     private String mediaUrl;
     private UUID repostOf;
     private UUID replyTo;
-    private Date createdAt;
+    private Instant createdAt;
     
     public PostsContract() {
     }
 
-    public PostsContract(UUID postId, UUID authorId, UUID userId, String content, List<String> hashtags, String mediaUrl, UUID repostOf, UUID replyTo, Date createdAt) {
+    public PostsContract(UUID postId, UUID authorId, String content, List<String> hashtags, String mediaUrl, UUID repostOf, UUID replyTo, Instant createdAt) {
         this.postId = postId;
         this.authorId = authorId;
-        this.userId = userId;
         this.content = content;
         this.hashtags = hashtags;
         this.mediaUrl = mediaUrl;
@@ -44,14 +49,6 @@ public class PostsContract {
 
     public void setAuthorId(UUID authorId) {
         this.authorId = authorId;
-    }
-
-    public UUID getUserId() {
-        return userId;
-    }
-
-    public void setUserId(UUID userId) {
-        this.userId = userId;
     }
 
     public String getContent() {
@@ -94,11 +91,11 @@ public class PostsContract {
         this.replyTo = replyTo;
     }
 
-    public Date getCreatedAt() {
+    public Instant getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(Date createdAt) {
+    public void setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
     }
 }
