@@ -1,7 +1,6 @@
 package com.epita.contracts;
 
 import java.time.Instant;
-import java.util.Date;
 import java.util.UUID;
 
 import org.bson.codecs.pojo.annotations.BsonProperty;
