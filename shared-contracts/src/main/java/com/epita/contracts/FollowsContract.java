@@ -1,17 +1,25 @@
 package com.epita.contracts;
 
-import java.sql.Date;
+import java.time.Instant;
 import java.util.UUID;
 
+import org.bson.codecs.pojo.annotations.BsonProperty;
+
+import io.quarkus.mongodb.panache.common.MongoEntity;
+
+@MongoEntity(collection="follows")
 public class FollowsContract {
+
+    @BsonProperty("_id")
+    private UUID id;
     private UUID followerId;
     private UUID followeeId;
-    private Date followedAt;
+    private Instant followedAt;
 
     public FollowsContract() {
     }
 
-    public FollowsContract(UUID followerId, UUID followeeId, Date followedAt) {
+    public FollowsContract(UUID followerId, UUID followeeId, Instant followedAt) {
         this.followerId = followerId;
         this.followeeId = followeeId;
         this.followedAt = followedAt;
@@ -33,11 +41,11 @@ public class FollowsContract {
         this.followeeId = followeeId;
     }
 
-    public Date getFollowedAt() {
+    public Instant getFollowedAt() {
         return followedAt;
     }
 
-    public void setFollowedAt(Date followedAt) {
+    public void setFollowedAt(Instant followedAt) {
         this.followedAt = followedAt;
     }
 }
