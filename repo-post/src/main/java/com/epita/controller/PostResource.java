@@ -8,6 +8,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Path("/api")
@@ -28,61 +29,60 @@ public class PostResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response createPost(PostsContract contract) {
-        try {
-            PostsContract createdPost = postService.createPost(contract);
-            return Response.status(Response.Status.CREATED).entity(createdPost).build();
-        } catch (IllegalArgumentException e) {
-            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+        Optional<PostsContract> createdPost = postService.createPost(contract);
+        if (createdPost.isPresent()) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("Post cannot create.").build();
         }
+        return Response.status(Response.Status.CREATED).entity(createdPost).build();
     }
 
     @DELETE
     @Path("/deletePost/{userId}/{postId}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response deleteOwnPost(@PathParam("userId") UUID userId, @PathParam("postId") UUID postId) {
-        try {
-            postService.deleteOwnPost(userId, postId);
-            return Response.ok().entity("Post deleted successfully.").build();
-        } catch (IllegalArgumentException e) {
-            return Response.status(Response.Status.NOT_FOUND).entity(e.getMessage()).build();
-        } catch (SecurityException e) {
-            return Response.status(Response.Status.FORBIDDEN).entity(e.getMessage()).build();
-        }
+        int err = postService.deleteOwnPost(userId, postId);
+        return switch (err) {
+            case 0 -> Response.ok().entity("Post deleted successfully.").build();
+            case 1 -> Response.status(Response.Status.NOT_FOUND).entity("Post not found").build();
+            default -> Response.status(Response.Status.FORBIDDEN)
+                    .entity("User not authorized to delete this post.").build();
+        };
     }
 
     @GET
     @Path("/getUserPosts/{userId}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getUserPosts(@PathParam("userId") UUID userId) {
-        try {
-            List<PostsContract> posts = postService.getUserPosts(userId);
-            return Response.ok(posts).build();
-        } catch (IllegalArgumentException e) {
-            return Response.status(Response.Status.NOT_FOUND).entity(e.getMessage()).build();
+        List<PostsContract> posts = postService.getUserPosts(userId);
+        if (posts.isEmpty()) {
+            return Response.status(Response.Status.NOT_FOUND).entity("User not found.").build();
         }
+        return Response.ok(posts).build();
     }
 
     @GET
     @Path("/getPost/{postId}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getPost(@PathParam("postId") UUID postId) {
-        try {
-            PostsContract post = postService.getPost(postId);
-            return Response.ok(post).build();
-        } catch (IllegalArgumentException e) {
-            return Response.status(Response.Status.NOT_FOUND).entity(e.getMessage()).build();
+        Optional<PostsContract> optionalPost = postService.getPost(postId);
+        if (optionalPost.isEmpty()) {
+            return Response.status(Response.Status.NOT_FOUND).entity("Post not found.").build();
         }
+
+        PostsContract post = optionalPost.get();
+        return Response.ok(post).build();
     }
 
     @GET
     @Path("/getReplyPost/{postId}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getReplyPost(@PathParam("postId") UUID postId) {
-        try {
-            PostsContract replyPost = postService.getReplyPost(postId);
-            return Response.ok(replyPost).build();
-        } catch (IllegalArgumentException e) {
-            return Response.status(Response.Status.NOT_FOUND).entity(e.getMessage()).build();
+        Optional<PostsContract> optionalPost = postService.getReplyPost(postId);
+        if (optionalPost.isEmpty()) {
+            return Response.status(Response.Status.NOT_FOUND).entity("Post not found.").build();
         }
+
+        PostsContract post = optionalPost.get();
+        return Response.ok(post).build();
     }
 }
