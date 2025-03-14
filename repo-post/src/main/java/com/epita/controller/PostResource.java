@@ -25,6 +25,7 @@ public class PostResource {
 
     @POST
     @Path("/createPost")
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response createPost(PostsContract contract) {
         try {
