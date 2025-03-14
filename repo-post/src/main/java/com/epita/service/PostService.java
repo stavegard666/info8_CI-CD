@@ -36,27 +36,28 @@ public class PostService {
             throw new IllegalArgumentException("Invalid number of elements.");
         }
         
-        if (contract.getRepostOf())
+        if (contract.getRepostOf() != null)
         {
             // Validate repost ID
-            if (postRepository.getPostById(contract.getRepostOf()).isEmpty()) {
+            var repostPost = postRepository.getPostById(contract.getRepostOf());
+            if (repostPost.isEmpty()) {
                 throw new IllegalArgumentException("Valid repostOf is required.");
             }
             // Check authorization
-            if (userRepository.findUserById(contract.getAuthorId(), postRepository.getPostById(contract.getRepostOf()).getAuthorId()).isEmpty()) {
+            if (userRepository.findUserById(repostPost.get().getAuthorId()).isEmpty()) {
                 throw new IllegalArgumentException("User not authorized to repost this post.");
             }
             nbElements++;
         }
         
-        if (contract.getReplyTo())
-        {
+        if (contract.getReplyTo() != null) {
             // Validate reply ID
-            if (postRepository.getPostById(contract.getReplyTo()).isEmpty()) {
+            var replyPost = postRepository.getPostById(contract.getReplyTo());
+            if (replyPost.isEmpty()) {
                 throw new IllegalArgumentException("Valid replyTo is required.");
             }
             // Check authorization
-            if (userRepository.findUserById(contract.getAuthorId(), postRepository.getPostById(contract.getReplyTo()).getAuthorId()).isEmpty()) {
+            if (userRepository.findUserById(replyPost.get().getAuthorId()).isEmpty()) {
                 throw new IllegalArgumentException("User not authorized to reply to this post.");
             }
         }
