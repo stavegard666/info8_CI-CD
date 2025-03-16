@@ -8,6 +8,7 @@ db.createCollection('posts')
 db.createCollection('likes')
 db.createCollection('follows')
 db.createCollection('blocks')
+db.createCollection('user-timeline')
 
 
 

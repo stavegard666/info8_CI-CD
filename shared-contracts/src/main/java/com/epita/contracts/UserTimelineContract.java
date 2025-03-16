@@ -1,17 +1,21 @@
 package com.epita.contracts;
 
-import java.util.Dictionary;
 import java.util.List;
 import java.util.UUID;
 
+import io.quarkus.mongodb.panache.common.MongoEntity;
+
+
+@MongoEntity(collection="user-timeline")
 public class UserTimelineContract {
-    private UUID userId;
-    private List<Dictionary<String, Object>> posts;
+    
+    public UUID userId;
+    public List<PostsContract> posts;
 
     public UserTimelineContract() {
     }
 
-    public UserTimelineContract(UUID userId, List<Dictionary<String, Object>> posts) {
+    public UserTimelineContract(UUID userId, List<PostsContract> posts) {
         this.userId = userId;
         this.posts = posts;
     }
@@ -24,11 +28,11 @@ public class UserTimelineContract {
         this.userId = userId;
     }
 
-    public List<Dictionary<String, Object>> getPosts() {
+    public List<PostsContract> getPosts() {
         return posts;
     }
 
-    public void setPosts(List<Dictionary<String, Object>> posts) {
+    public void setPosts(List<PostsContract> posts) {
         this.posts = posts;
     }
 }
