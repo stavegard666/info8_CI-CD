@@ -45,12 +45,6 @@ public class UserTimeLineService {
         }
 
         UserTimelineContract userTimelineContract = userTimeLineRepository.find("userId", userId).firstResult();
-        if (userTimelineContract == null) {
-            userTimelineContract = new UserTimelineContract();
-            userTimelineContract.userId = userId;
-            userTimelineContract.posts = new ArrayList<>();
-            userTimeLineRepository.persist(userTimelineContract);
-        }
 
         return Response.ok().build();
     }
