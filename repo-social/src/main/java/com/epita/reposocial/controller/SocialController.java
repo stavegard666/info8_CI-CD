@@ -8,13 +8,16 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import org.jboss.logging.Logger;
 
 import java.util.List;
+import java.util.UUID;
 
 @Path("/social")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class SocialController {
+    private static final Logger LOG = Logger.getLogger(SocialController.class);
 
     @Inject
     SocialServiceImpl socialService;
@@ -22,87 +25,271 @@ public class SocialController {
     // Like endpoints
     @POST
     @Path("/likes/{userId}/{postId}")
-    public Response likePost(@PathParam("userId") String userId, 
-                           @PathParam("postId") String postId) {
-        LikeEntity like = socialService.likePost(userId, postId);
-        return Response.status(Response.Status.CREATED).entity(like).build();
+    public Response likePost(@PathParam("userId") String userIdStr,
+            @PathParam("postId") String postIdStr) {
+        try {
+            UUID userId = UUID.fromString(userIdStr);
+            UUID postId = UUID.fromString(postIdStr);
+
+            LikeEntity like = socialService.likePost(userId, postId);
+            return Response.status(Response.Status.CREATED).entity(like).build();
+        } catch (IllegalArgumentException e) {
+            LOG.error("Invalid UUID format", e);
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("Invalid UUID format: " + e.getMessage())
+                    .build();
+        } catch (WebApplicationException e) {
+            LOG.error("Error liking post", e);
+            return Response.status(e.getResponse().getStatus())
+                    .entity(e.getMessage())
+                    .build();
+        } catch (Exception e) {
+            LOG.error("Unexpected error liking post", e);
+            return Response.serverError()
+                    .entity("Unexpected error: " + e.getMessage())
+                    .build();
+        }
     }
 
     @DELETE
     @Path("/likes/{userId}/{postId}")
-    public Response unlikePost(@PathParam("userId") String userId, 
-                             @PathParam("postId") String postId) {
-        socialService.unlikePost(userId, postId);
-        return Response.noContent().build();
+    public Response unlikePost(@PathParam("userId") String userIdStr,
+            @PathParam("postId") String postIdStr) {
+        try {
+            UUID userId = UUID.fromString(userIdStr);
+            UUID postId = UUID.fromString(postIdStr);
+
+            socialService.unlikePost(userId, postId);
+            return Response.noContent().build();
+        } catch (IllegalArgumentException e) {
+            LOG.error("Invalid UUID format", e);
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("Invalid UUID format: " + e.getMessage())
+                    .build();
+        } catch (Exception e) {
+            LOG.error("Unexpected error unliking post", e);
+            return Response.serverError()
+                    .entity("Unexpected error: " + e.getMessage())
+                    .build();
+        }
     }
 
     @GET
     @Path("/likes/post/{postId}")
-    public List<String> getLikingUsers(@PathParam("postId") String postId) {
-        return socialService.getLikingUsers(postId);
+    public Response getLikingUsers(@PathParam("postId") String postIdStr) {
+        try {
+            UUID postId = UUID.fromString(postIdStr);
+            List<UUID> likers = socialService.getLikingUsers(postId);
+            return Response.ok(likers).build();
+        } catch (IllegalArgumentException e) {
+            LOG.error("Invalid UUID format", e);
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("Invalid UUID format: " + e.getMessage())
+                    .build();
+        } catch (Exception e) {
+            LOG.error("Unexpected error getting liking users", e);
+            return Response.serverError()
+                    .entity("Unexpected error: " + e.getMessage())
+                    .build();
+        }
     }
 
     @GET
     @Path("/likes/user/{userId}")
-    public List<String> getUserLikedPosts(@PathParam("userId") String userId) {
-        return socialService.getUserLikedPosts(userId);
+    public Response getUserLikedPosts(@PathParam("userId") String userIdStr) {
+        try {
+            UUID userId = UUID.fromString(userIdStr);
+            List<UUID> likedPosts = socialService.getUserLikedPosts(userId);
+            return Response.ok(likedPosts).build();
+        } catch (IllegalArgumentException e) {
+            LOG.error("Invalid UUID format", e);
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("Invalid UUID format: " + e.getMessage())
+                    .build();
+        } catch (Exception e) {
+            LOG.error("Unexpected error getting user liked posts", e);
+            return Response.serverError()
+                    .entity("Unexpected error: " + e.getMessage())
+                    .build();
+        }
     }
 
     // Follow endpoints
     @POST
     @Path("/follows/{followerId}/{followedId}")
-    public Response followUser(@PathParam("followerId") String followerId, 
-                             @PathParam("followedId") String followedId) {
-        FollowEntity follow = socialService.followUser(followerId, followedId);
-        return Response.status(Response.Status.CREATED).entity(follow).build();
+    public Response followUser(@PathParam("followerId") String followerIdStr,
+            @PathParam("followedId") String followedIdStr) {
+        try {
+            UUID followerId = UUID.fromString(followerIdStr);
+            UUID followedId = UUID.fromString(followedIdStr);
+
+            FollowEntity follow = socialService.followUser(followerId, followedId);
+            return Response.status(Response.Status.CREATED).entity(follow).build();
+        } catch (IllegalArgumentException e) {
+            LOG.error("Invalid UUID format", e);
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("Invalid UUID format: " + e.getMessage())
+                    .build();
+        } catch (WebApplicationException e) {
+            LOG.error("Error following user", e);
+            return Response.status(e.getResponse().getStatus())
+                    .entity(e.getMessage())
+                    .build();
+        } catch (Exception e) {
+            LOG.error("Unexpected error following user", e);
+            return Response.serverError()
+                    .entity("Unexpected error: " + e.getMessage())
+                    .build();
+        }
     }
 
     @DELETE
     @Path("/follows/{followerId}/{followedId}")
-    public Response unfollowUser(@PathParam("followerId") String followerId, 
-                               @PathParam("followedId") String followedId) {
-        socialService.unfollowUser(followerId, followedId);
-        return Response.noContent().build();
+    public Response unfollowUser(@PathParam("followerId") String followerIdStr,
+            @PathParam("followedId") String followedIdStr) {
+        try {
+            UUID followerId = UUID.fromString(followerIdStr);
+            UUID followedId = UUID.fromString(followedIdStr);
+
+            socialService.unfollowUser(followerId, followedId);
+            return Response.noContent().build();
+        } catch (IllegalArgumentException e) {
+            LOG.error("Invalid UUID format", e);
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("Invalid UUID format: " + e.getMessage())
+                    .build();
+        } catch (Exception e) {
+            LOG.error("Unexpected error unfollowing user", e);
+            return Response.serverError()
+                    .entity("Unexpected error: " + e.getMessage())
+                    .build();
+        }
     }
 
     @GET
     @Path("/follows/followers/{userId}")
-    public List<String> getUserFollowers(@PathParam("userId") String userId) {
-        return socialService.getUserFollowers(userId);
+    public Response getUserFollowers(@PathParam("userId") String userIdStr) {
+        try {
+            UUID userId = UUID.fromString(userIdStr);
+            List<UUID> followers = socialService.getUserFollowers(userId);
+            return Response.ok(followers).build();
+        } catch (IllegalArgumentException e) {
+            LOG.error("Invalid UUID format", e);
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("Invalid UUID format: " + e.getMessage())
+                    .build();
+        } catch (Exception e) {
+            LOG.error("Unexpected error getting user followers", e);
+            return Response.serverError()
+                    .entity("Unexpected error: " + e.getMessage())
+                    .build();
+        }
     }
 
     @GET
     @Path("/follows/following/{userId}")
-    public List<String> getUserFollowing(@PathParam("userId") String userId) {
-        return socialService.getUserFollowing(userId);
+    public Response getUserFollowing(@PathParam("userId") String userIdStr) {
+        try {
+            UUID userId = UUID.fromString(userIdStr);
+            List<UUID> following = socialService.getUserFollowing(userId);
+            return Response.ok(following).build();
+        } catch (IllegalArgumentException e) {
+            LOG.error("Invalid UUID format", e);
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("Invalid UUID format: " + e.getMessage())
+                    .build();
+        } catch (Exception e) {
+            LOG.error("Unexpected error getting user following", e);
+            return Response.serverError()
+                    .entity("Unexpected error: " + e.getMessage())
+                    .build();
+        }
     }
 
     // Block endpoints
     @POST
     @Path("/blocks/{blockerId}/{blockedId}")
-    public Response blockUser(@PathParam("blockerId") String blockerId, 
-                            @PathParam("blockedId") String blockedId) {
-        BlockEntity block = socialService.blockUser(blockerId, blockedId);
-        return Response.status(Response.Status.CREATED).entity(block).build();
+    public Response blockUser(@PathParam("blockerId") String blockerIdStr,
+            @PathParam("blockedId") String blockedIdStr) {
+        try {
+            UUID blockerId = UUID.fromString(blockerIdStr);
+            UUID blockedId = UUID.fromString(blockedIdStr);
+
+            BlockEntity block = socialService.blockUser(blockerId, blockedId);
+            return Response.status(Response.Status.CREATED).entity(block).build();
+        } catch (IllegalArgumentException e) {
+            LOG.error("Invalid UUID format", e);
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("Invalid UUID format: " + e.getMessage())
+                    .build();
+        } catch (Exception e) {
+            LOG.error("Unexpected error blocking user", e);
+            return Response.serverError()
+                    .entity("Unexpected error: " + e.getMessage())
+                    .build();
+        }
     }
 
     @DELETE
     @Path("/blocks/{blockerId}/{blockedId}")
-    public Response unblockUser(@PathParam("blockerId") String blockerId, 
-                              @PathParam("blockedId") String blockedId) {
-        socialService.unblockUser(blockerId, blockedId);
-        return Response.noContent().build();
+    public Response unblockUser(@PathParam("blockerId") String blockerIdStr,
+            @PathParam("blockedId") String blockedIdStr) {
+        try {
+            UUID blockerId = UUID.fromString(blockerIdStr);
+            UUID blockedId = UUID.fromString(blockedIdStr);
+
+            socialService.unblockUser(blockerId, blockedId);
+            return Response.noContent().build();
+        } catch (IllegalArgumentException e) {
+            LOG.error("Invalid UUID format", e);
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("Invalid UUID format: " + e.getMessage())
+                    .build();
+        } catch (Exception e) {
+            LOG.error("Unexpected error unblocking user", e);
+            return Response.serverError()
+                    .entity("Unexpected error: " + e.getMessage())
+                    .build();
+        }
     }
 
     @GET
     @Path("/blocks/blocked/{userId}")
-    public List<String> getUserBlocked(@PathParam("userId") String userId) {
-        return socialService.getUserBlocked(userId);
+    public Response getUserBlocked(@PathParam("userId") String userIdStr) {
+        try {
+            UUID userId = UUID.fromString(userIdStr);
+            List<UUID> blocked = socialService.getUserBlocked(userId);
+            return Response.ok(blocked).build();
+        } catch (IllegalArgumentException e) {
+            LOG.error("Invalid UUID format", e);
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("Invalid UUID format: " + e.getMessage())
+                    .build();
+        } catch (Exception e) {
+            LOG.error("Unexpected error getting blocked users", e);
+            return Response.serverError()
+                    .entity("Unexpected error: " + e.getMessage())
+                    .build();
+        }
     }
 
     @GET
     @Path("/blocks/blockers/{userId}")
-    public List<String> getUserBlockers(@PathParam("userId") String userId) {
-        return socialService.getUserBlockers(userId);
+    public Response getUserBlockers(@PathParam("userId") String userIdStr) {
+        try {
+            UUID userId = UUID.fromString(userIdStr);
+            List<UUID> blockers = socialService.getUserBlockers(userId);
+            return Response.ok(blockers).build();
+        } catch (IllegalArgumentException e) {
+            LOG.error("Invalid UUID format", e);
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("Invalid UUID format: " + e.getMessage())
+                    .build();
+        } catch (Exception e) {
+            LOG.error("Unexpected error getting user blockers", e);
+            return Response.serverError()
+                    .entity("Unexpected error: " + e.getMessage())
+                    .build();
+        }
     }
-} 
+}

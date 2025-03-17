@@ -4,20 +4,22 @@ import io.quarkus.mongodb.panache.common.MongoEntity;
 import org.bson.types.ObjectId;
 
 import java.time.Instant;
+import java.util.Date;
+import java.util.UUID;
 
 @MongoEntity(collection = "blocks")
 public class BlockEntity {
     public ObjectId id;
-    public String blockerId;
-    public String blockedId;
-    public Instant blockedAt;
+    public UUID blockerId;
+    public UUID blockedId;
+    public Date blockedAt;
 
     public BlockEntity() {
     }
 
-    public BlockEntity(String blockerId, String blockedId) {
+    public BlockEntity(UUID blockerId, UUID blockedId) {
         this.blockerId = blockerId;
         this.blockedId = blockedId;
-        this.blockedAt = Instant.now();
+        this.blockedAt = new Date();
     }
-} 
+}
