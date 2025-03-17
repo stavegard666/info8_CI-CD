@@ -30,8 +30,9 @@ public class PostService {
     @Inject
     DeletePublisher deletePublisher;
 
-    public Optional<PostsContract> createPost(PostsContract contract) {
+    public Optional<PostsContract> createPost(PostsContract contract, StringBuilder builder) {
         if (contract == null || contract.getContent() == null || contract.getContent().trim().isEmpty()) {
+            builder.append("Post content is required");
             return Optional.empty(); // Post content is required.
         }
 
@@ -41,9 +42,11 @@ public class PostService {
         {
             var repostPost = postRepository.getPostById(contract.getRepostOf());
             if (repostPost.isEmpty()) {
+                builder.append("RepostId does not exist, Valid repostOf is required.");
                 return Optional.empty(); // Valid repostOf is required.
             }
             if (userRepository.findUserById(repostPost.get().getUserId()).isEmpty()) {
+                builder.append("User not authorized to repost this post.");
                 return Optional.empty(); // User not authorized to repost this post.
             }
         }
@@ -51,20 +54,25 @@ public class PostService {
         if (contract.getReplyTo() != null) {
             var replyPost = postRepository.getPostById(contract.getReplyTo());
             if (replyPost.isEmpty()) {
+                builder.append("ReplyId does not exist, Valid replyTo is required.");
                 return Optional.empty(); // Valid replyTo is required.
             }
             if (userRepository.findUserById(replyPost.get().getUserId()).isEmpty()) {
+                builder.append("User not authorized to reply to this post.");
                 return Optional.empty(); // User not authorized to reply to this post.
             }
         }
 
-        if (contract.getPostId() == null)
+        if (contract.getPostId() == null) {
             contract.setPostId(UUID.randomUUID());
+        }
 
-        if (contract.getCreatedAt() == null)
+        if (contract.getCreatedAt() == null) {
             contract.setCreatedAt(Instant.now());
+        }
 
         if (contract.getUserId() == null || userRepository.findUserById(contract.getUserId()).isEmpty()) {
+            builder.append("Valid userId is required.");
             return Optional.empty(); // Valid userId is required.
         }
 
@@ -73,22 +81,20 @@ public class PostService {
     }
 
     public int deleteOwnPost(UUID userId, UUID postId) {
-        Optional<PostsContract> optionalPost = postRepository.getPostById(postId);
-
+        Optional<PostsContract> optionalPost = postRepository.find("postId", postId).firstResultOptional();
         if (optionalPost.isEmpty()) {
-            return 1; // Error : Post not found
+            return 1;
         }
 
         PostsContract post = optionalPost.get();
-
         if (!post.getUserId().equals(userId)) {
-            return 2; // Error : User not authorized to delete this post.
+            return 2;
         }
 
         postRepository.delete(post);
         deletePublisher.publish(post);
 
-        return 0; //
+        return 0;
     }
 
     public List<PostsContract> getUserPosts(UUID userId) {
