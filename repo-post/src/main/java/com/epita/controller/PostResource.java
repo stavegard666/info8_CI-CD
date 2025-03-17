@@ -29,9 +29,10 @@ public class PostResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response createPost(PostsContract contract) {
-        Optional<PostsContract> createdPost = postService.createPost(contract);
-        if (createdPost.isPresent()) {
-            return Response.status(Response.Status.BAD_REQUEST).entity("Post cannot create.").build();
+        StringBuilder builder = new StringBuilder("Post cannot be created. ");
+        Optional<PostsContract> createdPost = postService.createPost(contract, builder);
+        if (createdPost.isEmpty()) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(builder.toString()).build();
         }
         return Response.status(Response.Status.CREATED).entity(createdPost).build();
     }
@@ -44,8 +45,8 @@ public class PostResource {
         return switch (err) {
             case 0 -> Response.ok().entity("Post deleted successfully.").build();
             case 1 -> Response.status(Response.Status.NOT_FOUND).entity("Post not found").build();
-            default -> Response.status(Response.Status.FORBIDDEN)
-                    .entity("User not authorized to delete this post.").build();
+            default ->
+                    Response.status(Response.Status.FORBIDDEN).entity("User not authorized to delete this post.").build();
         };
     }
 
@@ -64,12 +65,11 @@ public class PostResource {
     @Path("/getPost/{postId}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getPost(@PathParam("postId") UUID postId) {
-        Optional<PostsContract> optionalPost = postService.getPost(postId);
-        if (optionalPost.isEmpty()) {
+        Optional<PostsContract> post = postService.getPost(postId);
+        if (post.isEmpty()) {
             return Response.status(Response.Status.NOT_FOUND).entity("Post not found.").build();
         }
 
-        PostsContract post = optionalPost.get();
         return Response.ok(post).build();
     }
 
@@ -77,12 +77,11 @@ public class PostResource {
     @Path("/getReplyPost/{postId}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getReplyPost(@PathParam("postId") UUID postId) {
-        Optional<PostsContract> optionalPost = postService.getReplyPost(postId);
-        if (optionalPost.isEmpty()) {
+        Optional<PostsContract> post = postService.getReplyPost(postId);
+        if (post.isEmpty()) {
             return Response.status(Response.Status.NOT_FOUND).entity("Post not found.").build();
         }
 
-        PostsContract post = optionalPost.get();
         return Response.ok(post).build();
     }
 }
