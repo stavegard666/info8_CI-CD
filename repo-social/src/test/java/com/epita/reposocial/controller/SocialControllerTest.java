@@ -15,6 +15,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import com.epita.reposocial.entity.BlockEntity;
 import com.epita.reposocial.entity.FollowEntity;
@@ -25,6 +27,7 @@ import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class SocialControllerTest {
 
     @Mock

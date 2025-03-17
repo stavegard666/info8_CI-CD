@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -21,6 +22,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import com.epita.contracts.BlocksUserContract;
 import com.epita.contracts.FollowsContract;
@@ -37,6 +40,7 @@ import io.smallrye.mutiny.Uni;
 import jakarta.ws.rs.WebApplicationException;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class SocialServiceImplTest {
 
     @Mock
@@ -87,21 +91,21 @@ class SocialServiceImplTest {
         followsContract = new FollowsContract();
         blocksContract = new BlocksUserContract();
 
-        when(socialMapper.toLikesContract(any(LikeEntity.class))).thenReturn(likesContract);
-        when(socialMapper.toFollowsContract(any(FollowEntity.class))).thenReturn(followsContract);
-        when(socialMapper.toBlocksUserContract(any(BlockEntity.class))).thenReturn(blocksContract);
+        lenient().when(socialMapper.toLikesContract(any(LikeEntity.class))).thenReturn(likesContract);
+        lenient().when(socialMapper.toFollowsContract(any(FollowEntity.class))).thenReturn(followsContract);
+        lenient().when(socialMapper.toBlocksUserContract(any(BlockEntity.class))).thenReturn(blocksContract);
 
-        when(redisMessagingService.publishLikeCreated(any(LikesContract.class)))
+        lenient().when(redisMessagingService.publishLikeCreated(any(LikesContract.class)))
                 .thenReturn(Uni.createFrom().voidItem());
-        when(redisMessagingService.publishLikeDeleted(any(UUID.class), any(UUID.class)))
+        lenient().when(redisMessagingService.publishLikeDeleted(any(UUID.class), any(UUID.class)))
                 .thenReturn(Uni.createFrom().voidItem());
-        when(redisMessagingService.publishFollowCreated(any(FollowsContract.class)))
+        lenient().when(redisMessagingService.publishFollowCreated(any(FollowsContract.class)))
                 .thenReturn(Uni.createFrom().voidItem());
-        when(redisMessagingService.publishFollowDeleted(any(UUID.class), any(UUID.class)))
+        lenient().when(redisMessagingService.publishFollowDeleted(any(UUID.class), any(UUID.class)))
                 .thenReturn(Uni.createFrom().voidItem());
-        when(redisMessagingService.publishBlockCreated(any(BlocksUserContract.class)))
+        lenient().when(redisMessagingService.publishBlockCreated(any(BlocksUserContract.class)))
                 .thenReturn(Uni.createFrom().voidItem());
-        when(redisMessagingService.publishBlockDeleted(any(UUID.class), any(UUID.class)))
+        lenient().when(redisMessagingService.publishBlockDeleted(any(UUID.class), any(UUID.class)))
                 .thenReturn(Uni.createFrom().voidItem());
     }
 

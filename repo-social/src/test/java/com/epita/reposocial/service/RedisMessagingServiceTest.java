@@ -13,6 +13,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import com.epita.contracts.BlocksUserContract;
 import com.epita.contracts.FollowsContract;
@@ -21,6 +23,7 @@ import io.quarkus.redis.client.RedisClient;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class RedisMessagingServiceTest {
 
     @Mock
