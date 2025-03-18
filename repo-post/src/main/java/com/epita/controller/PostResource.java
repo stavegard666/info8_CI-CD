@@ -6,7 +6,7 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.HeaderParam;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.DELETE;
@@ -21,7 +21,7 @@ import java.util.UUID;
 public class PostResource {
 
     @Inject
-    private PostService postService;
+    PostService postService;
 
     @GET
     @Path("/hello")
@@ -44,9 +44,9 @@ public class PostResource {
     }
 
     @DELETE
-    @Path("/deletePost/{userId}/{postId}")
+    @Path("/deletePost")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response deleteOwnPost(@PathParam("userId") UUID userId, @PathParam("postId") UUID postId) {
+    public Response deleteOwnPost(@HeaderParam("X-userId") UUID userId, @HeaderParam("X-postId") UUID postId) {
         int err = postService.deleteOwnPost(userId, postId);
         return switch (err) {
             case 0 -> Response.ok().entity("Post deleted successfully.").build();
@@ -57,9 +57,9 @@ public class PostResource {
     }
 
     @GET
-    @Path("/getUserPosts/{userId}")
+    @Path("/getUserPosts")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getUserPosts(@PathParam("userId") UUID userId) {
+    public Response getUserPosts(@HeaderParam("X-userId") UUID userId) {
         List<PostsContract> posts = postService.getUserPosts(userId);
         if (posts.isEmpty()) {
             return Response.status(Response.Status.NOT_FOUND).entity("User not found.").build();
@@ -68,9 +68,9 @@ public class PostResource {
     }
 
     @GET
-    @Path("/getPost/{postId}")
+    @Path("/getPost")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getPost(@PathParam("postId") UUID postId) {
+    public Response getPost(@HeaderParam("X-postId") UUID postId) {
         Optional<PostsContract> post = postService.getPost(postId);
         if (post.isEmpty()) {
             return Response.status(Response.Status.NOT_FOUND).entity("Post not found.").build();
@@ -80,9 +80,9 @@ public class PostResource {
     }
 
     @GET
-    @Path("/getReplyPost/{postId}")
+    @Path("/getReplyPost")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getReplyPost(@PathParam("postId") UUID postId) {
+    public Response getReplyPost(@HeaderParam("X-postId") UUID postId) {
         Optional<PostsContract> post = postService.getReplyPost(postId);
         if (post.isEmpty()) {
             return Response.status(Response.Status.NOT_FOUND).entity("Post not found.").build();
@@ -90,4 +90,5 @@ public class PostResource {
 
         return Response.ok(post).build();
     }
+
 }
