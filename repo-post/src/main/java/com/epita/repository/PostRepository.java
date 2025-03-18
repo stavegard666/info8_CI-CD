@@ -12,7 +12,7 @@ import java.util.UUID;
 public class PostRepository implements PanacheMongoRepository<PostsContract> {
 
     public List<PostsContract> getUserPosts(UUID userId) {
-        return find("authorId", userId).list();
+        return find("userId", userId).list();
     }
 
     public Optional<PostsContract> getPostById(UUID postId) {
