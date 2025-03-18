@@ -15,7 +15,7 @@ public class PostRepository implements PanacheMongoRepository<PostsContract> {
         return find("userId", userId).list();
     }
 
-    public Optional<PostsContract> getPostById(UUID postId) {
+    public Optional<PostsContract>                                                                                                                                                                                                                                                          getPostById(UUID postId) {
         return find("postId", postId).firstResultOptional();
     }
 
