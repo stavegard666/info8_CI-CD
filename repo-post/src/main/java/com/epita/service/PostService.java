@@ -76,12 +76,13 @@ public class PostService {
             return Optional.empty(); // Valid userId is required.
         }
 
+        postRepository.savePost(contract);
         postPublisher.publish(contract);
         return Optional.of(contract);
     }
 
     public int deleteOwnPost(UUID userId, UUID postId) {
-        Optional<PostsContract> optionalPost = postRepository.find("postId", postId).firstResultOptional();
+        Optional<PostsContract> optionalPost = postRepository.getPostById(postId);
         if (optionalPost.isEmpty()) {
             return 1;
         }
