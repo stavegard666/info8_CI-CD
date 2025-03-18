@@ -10,10 +10,10 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
 import java.time.Instant;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @ApplicationScoped
 public class PostService {
@@ -75,6 +75,14 @@ public class PostService {
             builder.append("Valid userId is required.");
             return Optional.empty(); // Valid userId is required.
         }
+
+        Pattern pattern = Pattern.compile("#\\w+");
+        Matcher matcher = pattern.matcher(contract.getContent());
+        List<String> hashtags = new ArrayList<>();
+        while (matcher.find()) {
+            hashtags.add(matcher.group());
+        }
+        contract.setHashtags(hashtags);
 
         postRepository.savePost(contract);
         postPublisher.publish(contract);
