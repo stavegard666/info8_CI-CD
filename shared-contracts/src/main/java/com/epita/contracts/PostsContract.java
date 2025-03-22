@@ -13,7 +13,7 @@ public class PostsContract {
 
     @BsonProperty("_id")
     private UUID postId;
-    private UUID userId;
+    private UUID authorId;
     private String content;
     private List<String> hashtags;
     private String mediaUrl;
@@ -26,7 +26,7 @@ public class PostsContract {
 
     public PostsContract(UUID postId, UUID authorId, String content, List<String> hashtags, String mediaUrl, UUID repostOf, UUID replyTo, Instant createdAt) {
         this.postId = postId;
-        this.userId = authorId;
+        this.authorId = authorId;
         this.content = content;
         this.hashtags = hashtags;
         this.mediaUrl = mediaUrl;
@@ -44,11 +44,11 @@ public class PostsContract {
     }
 
     public UUID getAuthorId() {
-        return userId;
+        return authorId;
     }
 
     public void setAuthorId(UUID authorId) {
-        this.userId = authorId;
+        this.authorId = authorId;
     }
 
     public String getContent() {
