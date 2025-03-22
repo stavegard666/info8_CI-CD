@@ -1,121 +1,89 @@
 package com.epita;
 
 import com.epita.ElasticSearch.ElasticSearchRestClient;
+import com.epita.ElasticSearch.contracts.PostContract;
+import com.epita.ElasticSearch.contracts.UsersContract;
+
+import jakarta.ws.rs.core.Response;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
+
+import java.util.List;
+
 import org.eclipse.microprofile.rest.client.inject.RestClient;
+import org.jboss.logging.annotations.Pos;
 
 @Path("/api")
 public class srvcSearch {
 
     @Inject
-    ElasticSearchRestClient elasticSearchReastClient;
+    ElasticSearchRestClient elasticSearchReastClient;    
 
     @GET
     @Path("/")
     @Produces(MediaType.TEXT_PLAIN)
-    public String get() {
-        try {
-            return elasticSearchReastClient.root();
-        } catch (WebApplicationException e) {
-            return e.getMessage();
-        }
+    public Response get() {
+        return Response.ok().build();
     }
 
 
     @GET
     @Path("/get/{name}")
     @Produces(MediaType.TEXT_PLAIN)
-    public String get_index(@PathParam("name") String name) {
-        try {
-            try {
-                elasticSearchReastClient.get_index(name, "");
-            } catch (Exception e) {
-                elasticSearchReastClient.create_index(name, "{\n" +
-                        "\t\"mappings\": {\n" +
-                        "\n" +
-                        "\t\t\t\"properties\": {\n" +
-                        "\t\t\t\t\"movies\": {\n" +
-                        "\t\t\t\t\t\"properties\": {\n" +
-                        "\t\t\t\t\t\t\"name\": {\n" +
-                        "\t\t\t\t\t\t\t\"type\": \"text\"\n" +
-                        "\t\t\t\t\t\t},\n" +
-                        "\t\t\t\t\t\t\"genres\": {\n" +
-                        "\t\t\t\t\t\t\t\"type\": \"text\"\n" +
-                        "\t\t\t\t\t\t}\n" +
-                        "\t\t\t\t\t}\n" +
-                        "\t\t\t\t}\n" +
-                        "\n" +
-                        "\t\t}\n" +
-                        "\t},\n" +
-                        "\t\"settings\": {\n" +
-                        "\t\t\"number_of_shards\": 1,\n" +
-                        "\t\t\"number_of_replicas\": 2\n" +
-                        "\t}\n" +
-                        "}");
-            }
-            return elasticSearchReastClient.get_index(name, "");
-        } catch (WebApplicationException e) {
-            return e.getMessage();
-        }
+    public Response get_index(@PathParam("name") String name) {
+        return Response.ok().build();
     }
 
     @GET
     @Path("/delete/{name}")
     @Produces(MediaType.TEXT_PLAIN)
-    public String delete_index(@PathParam("name") String name) {
-        try {
-            return elasticSearchReastClient.delete_index(name);
-        } catch (WebApplicationException e) {
-            return e.getMessage();
-        }
+    public Response delete_index(@PathParam("name") String name) {
+        return Response.ok().build();
     }
 
     @GET
     @Path("/delete/{name}/{id}")
     @Produces(MediaType.TEXT_PLAIN)
-    public String delete_id(@PathParam("name") String name, @PathParam("id") String _id) {
-        try {
-            return elasticSearchReastClient.delete_id(name, _id);
-        } catch (WebApplicationException e) {
-            return e.getMessage();
-        }
+    public Response delete_id(@PathParam("name") String name, @PathParam("id") String _id) {
+        return Response.ok().build();
     }
 
-    @GET
-    @Path("/add")
+    @POST
+    @Path("/add_post")
     @Produces(MediaType.TEXT_PLAIN)
-    public String add() {
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response add_post(PostContract postContract) {
         try {
-            elasticSearchReastClient.add_one("movies", "{\"name\": \"AAAAAH\", \"genres\" : \"Ok\"}");
-            return elasticSearchReastClient.add_bulk("{ \"create\" : { \"_index\" : \"movies\", \"_id\": 1 } }\n" +
-                    "{\"name\": \"Titanic\", \"genres\" : \"Snif\"}\n" +
-                    "{ \"create\" : { \"_index\" : \"movies\", \"_id\": 2 } }\n" +
-                    "{\"name\": \"Mad Max\", \"genres\" : \"BoumBoum\"}\n" +
-                    "\n");
-        } catch (WebApplicationException e) {
-            return e.getMessage();
+            List<UsersContract> users = elasticSearchReastClient.search_user_by_id(postContract.getAuthorId());
+            if(users.size() == 0) {
+                throw new Exception("User not found");
+            }
+            elasticSearchReastClient.insert_post(postContract);
+        } catch (Exception e) {
+            return Response.status(400).entity(e.getMessage() + "\nCan't insert post").build();
         }
+        return Response.ok("Post inserted").build();
+    }
+
+    @POST
+    @Path("/add_user")
+    @Produces(MediaType.TEXT_PLAIN)
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response add_user(UsersContract usersContract) {
+        try {
+
+            elasticSearchReastClient.insert_user(usersContract);
+        } catch (Exception e) {
+            return Response.status(400).entity(e.getMessage() + "\nCan't insert post").build();
+        }
+        return Response.ok("User inserted").build();
     }
 
     @GET
     @Path("/get_match")
     @Produces(MediaType.TEXT_PLAIN)
-    public String get_with_match() {
-        try {
-            return elasticSearchReastClient.get_index("movies", "{\n" +
-                    "  \"query\": {\n" +
-                    "    \"match\": {\n" +
-                    "      \"name\": {\n" +
-                    "\t\t\t\t\"query\": \"Titanic\",\n" +
-                    "\t\t\t\t\"auto_generate_synonyms_phrase_query\" : false\n" +
-                    "\t\t\t}\n" +
-                    "    }\n" +
-                    "  }\n" +
-                    "}");
-        } catch (WebApplicationException e) {
-            return e.getMessage();
-        }
+    public Response get_with_match() {
+        return Response.ok().build();
     }
 }

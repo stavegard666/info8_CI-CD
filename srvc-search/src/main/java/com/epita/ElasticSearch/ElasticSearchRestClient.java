@@ -1,117 +1,60 @@
 package com.epita.ElasticSearch;
 
 
+import java.io.IOException;
+import java.util.List;
+import java.util.UUID;
+
+import com.arjuna.ats.internal.jdbc.drivers.modifiers.list;
+import com.epita.ElasticSearch.contracts.PostContract;
+import com.epita.ElasticSearch.contracts.UsersContract;
+
+import co.elastic.clients.elasticsearch.core.IndexRequest;
+import co.elastic.clients.elasticsearch.core.SearchRequest;
+import co.elastic.clients.elasticsearch.core.SearchResponse;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-
+import co.elastic.clients.elasticsearch.ElasticsearchAsyncClient;
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch._types.query_dsl.QueryBuilders;
 @ApplicationScoped
 public class ElasticSearchRestClient {
 
-    private String URI = "http://localhost:9200";
 
-    private final Client client;
+    @Inject
+    ElasticsearchClient elasticsearchClient;
 
-    public ElasticSearchRestClient() {
-        this.client = ClientBuilder.newClient();
-    }
-
-    public String root() {
-        try{
-            Response response = client.target(URI).path("/").request(MediaType.TEXT_PLAIN).get();
-            if (response.getStatus() == 200) {
-                return response.readEntity(String.class);
-            } else {
-                throw new WebApplicationException("Can't get hello", response.getStatus());
-            }
-        }
-        catch (WebApplicationException e) {
-            throw new WebApplicationException(e.getMessage(), e.getResponse().getStatus());
-        }
+    public void insert_post(PostContract postContract) throws IOException {
+        IndexRequest<PostContract> request = IndexRequest.of(  
+            b -> b.index("posts")
+                .id(postContract.getPostId().toString())
+                .document(postContract)); 
+        elasticsearchClient.index(request);  
     }
 
-    public String create_index(String index_name, String body) {
-        try{
-            Response response = client.target(URI).path(String.format("/%s", index_name)).request(MediaType.TEXT_PLAIN).put(Entity.json(body));
-            if (response.getStatus() == 200) {
-                return response.readEntity(String.class);
-            } else {
-                throw new WebApplicationException("Can't create index", response.getStatus());
-            }
-        }
-        catch (WebApplicationException e) {
-            throw new WebApplicationException(e.getMessage(), e.getResponse().getStatus());
-        }
-    }
-    public String get_index(String index_name, String body) {
-        try{
-            Response response = client.target(URI).path(String.format("/%s/_search", index_name)).request(MediaType.TEXT_PLAIN).post(Entity.json(body));
-            if (response.getStatus() == 200) {
-                return response.readEntity(String.class);
-            } else {
-                throw new WebApplicationException("Can't get index", response.getStatus());
-            }
-        }
-        catch (WebApplicationException e) {
-            throw new WebApplicationException(e.getMessage(), e.getResponse().getStatus());
-        }
-    }
-    public String add_bulk(String body) {
-        try{
-            Response response = client.target(URI).path("/_bulk").request(MediaType.TEXT_PLAIN).post(Entity.json(body));
-            if (response.getStatus() == 200) {
-                return response.readEntity(String.class);
-            } else {
-                throw new WebApplicationException("Can't add bulk", response.getStatus());
-            }
-        }
-        catch (WebApplicationException e) {
-            throw new WebApplicationException(e.getMessage(), e.getResponse().getStatus());
-        }
+    public void insert_user(UsersContract usersContract) throws IOException {
+        IndexRequest<UsersContract> request = IndexRequest.of(  
+            b -> b.index("users")
+                .id(usersContract.getUserId().toString())
+                .document(usersContract)); 
+        elasticsearchClient.index(request);  
     }
 
-    public String add_one(String index_name, String body) {
-        try{
-            Response response = client.target(URI).path(String.format("/%s/_doc", index_name)).request(MediaType.TEXT_PLAIN).post(Entity.json(body));
-            if (response.getStatus() == 200 || response.getStatus() == 201) {
-                return response.readEntity(String.class);
-            } else {
-                throw new WebApplicationException("Can't add one", response.getStatus());
-            }
-        }
-        catch (WebApplicationException e) {
-            throw new WebApplicationException(e.getMessage(), e.getResponse().getStatus());
-        }
+    public List<UsersContract> search_user_by_id(UUID userId) throws IOException {
+        SearchRequest searchRequest = SearchRequest.of( b -> b.index("users").query(QueryBuilders.matchPhrase().field("userId").query(userId.toString()).build()._toQuery()));
+        List<UsersContract> searchResponse = elasticsearchClient.search(searchRequest, UsersContract.class).hits().hits().stream().map(hit -> hit.source()).collect(java.util.stream.Collectors.toList());
+        return searchResponse;
     }
-    public String delete_id(String index_name, String id) {
-        try{
-            Response response = client.target(URI).path(String.format("/%s/_doc/%s", index_name, id)).request(MediaType.TEXT_PLAIN).delete();
-            if (response.getStatus() == 200 || response.getStatus() == 201) {
-                return response.readEntity(String.class);
-            } else {
-                throw new WebApplicationException("Can't delete one", response.getStatus());
-            }
-        }
-        catch (WebApplicationException e) {
-            throw new WebApplicationException(e.getMessage(), e.getResponse().getStatus());
-        }
+    public List<UsersContract> search_post(UUID userId) throws IOException {
+        SearchRequest searchRequest = SearchRequest.of( b -> b.index("users").query(QueryBuilders.matchPhrase().field("userId").query(userId.toString()).build()._toQuery()));
+        List<UsersContract> searchResponse = elasticsearchClient.search(searchRequest, UsersContract.class).hits().hits().stream().map(hit -> hit.source()).collect(java.util.stream.Collectors.toList());
+        return searchResponse;
     }
-    public String delete_index(String index_name) {
-        try{
-            Response response = client.target(URI).path(String.format("/%s/", index_name)).request(MediaType.TEXT_PLAIN).delete();
-            if (response.getStatus() == 200 || response.getStatus() == 201) {
-                return response.readEntity(String.class);
-            } else {
-                throw new WebApplicationException("Can't delete one", response.getStatus());
-            }
-        }
-        catch (WebApplicationException e) {
-            throw new WebApplicationException(e.getMessage(), e.getResponse().getStatus());
-        }
-    }
+
 }
-

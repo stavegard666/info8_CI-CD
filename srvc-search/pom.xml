@@ -27,5 +27,9 @@
       <artifactId>microprofile-rest-client-api</artifactId>
       <version>3.0.1</version>
     </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-elasticsearch-java-client</artifactId>
+    </dependency>
   </dependencies>
 </project>

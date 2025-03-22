@@ -8,6 +8,7 @@ import org.bson.codecs.pojo.annotations.BsonProperty;
 
 import io.quarkus.mongodb.panache.common.MongoEntity;
 
+
 @MongoEntity(collection="posts")
 public class PostsContract {
 
