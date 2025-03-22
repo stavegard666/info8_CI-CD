@@ -8,7 +8,10 @@ import java.util.UUID;
 import com.arjuna.ats.internal.jdbc.drivers.modifiers.list;
 import com.epita.ElasticSearch.contracts.PostContract;
 import com.epita.ElasticSearch.contracts.UsersContract;
+import com.oracle.svm.core.annotate.Delete;
 
+import co.elastic.clients.elasticsearch.core.DeleteRequest;
+import co.elastic.clients.elasticsearch.core.DeleteResponse;
 import co.elastic.clients.elasticsearch.core.IndexRequest;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
@@ -46,13 +49,18 @@ public class ElasticSearchRestClient {
         elasticsearchClient.index(request);  
     }
 
+    public String delete_by_id(String name, UUID userId) throws IOException {
+        DeleteRequest searchRequest = DeleteRequest.of( b -> b.index(name).id(userId.toString()));
+        String searchResponse = elasticsearchClient.delete(searchRequest).result().toString();
+        return "Deleted";
+    }
     public List<UsersContract> search_user_by_id(UUID userId) throws IOException {
         SearchRequest searchRequest = SearchRequest.of( b -> b.index("users").query(QueryBuilders.matchPhrase().field("userId").query(userId.toString()).build()._toQuery()));
         List<UsersContract> searchResponse = elasticsearchClient.search(searchRequest, UsersContract.class).hits().hits().stream().map(hit -> hit.source()).collect(java.util.stream.Collectors.toList());
         return searchResponse;
     }
     public List<UsersContract> search_post(UUID userId) throws IOException {
-        SearchRequest searchRequest = SearchRequest.of( b -> b.index("users").query(QueryBuilders.matchPhrase().field("userId").query(userId.toString()).build()._toQuery()));
+        SearchRequest searchRequest = SearchRequest.of( b -> b.index("posts").query(QueryBuilders.matchPhrase().field("userId").query(userId.toString()).build()._toQuery()));
         List<UsersContract> searchResponse = elasticsearchClient.search(searchRequest, UsersContract.class).hits().hits().stream().map(hit -> hit.source()).collect(java.util.stream.Collectors.toList());
         return searchResponse;
     }

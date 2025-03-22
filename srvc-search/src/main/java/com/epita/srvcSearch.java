@@ -9,7 +9,9 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.UUID;
 
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.annotations.Pos;
@@ -36,17 +38,14 @@ public class srvcSearch {
     }
 
     @GET
-    @Path("/delete/{name}")
-    @Produces(MediaType.TEXT_PLAIN)
-    public Response delete_index(@PathParam("name") String name) {
-        return Response.ok().build();
-    }
-
-    @GET
     @Path("/delete/{name}/{id}")
     @Produces(MediaType.TEXT_PLAIN)
-    public Response delete_id(@PathParam("name") String name, @PathParam("id") String _id) {
-        return Response.ok().build();
+    public Response delete_id(@PathParam("name") String name, @PathParam("id") UUID _id) {
+        try {
+            return Response.ok(elasticSearchReastClient.delete_by_id(name, _id)).build();
+        } catch( IOException r) {
+            return Response.status(400).entity(r.getMessage() + "Can't delete").build();
+        }
     }
 
     @POST
