@@ -12,11 +12,13 @@ import io.quarkus.mongodb.panache.PanacheMongoEntityBase;
 import io.quarkus.mongodb.panache.common.MongoEntity;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper=false)
 @MongoEntity(collection = "posts")
 public class PostsEntity extends PanacheMongoEntityBase {
     
@@ -33,6 +35,7 @@ public class PostsEntity extends PanacheMongoEntityBase {
     public PostsContract toContract() {
         return new PostsContract(postId, userId, content, hashtags, mediaUrl, repostOf, replyTo, createdAt);
     }
+
     public PostsEntity(PostsContract post) {
         this.postId = UUID.randomUUID();
         this.userId = post.getUserId();

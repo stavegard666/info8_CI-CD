@@ -12,7 +12,7 @@ import lombok.Data;
 public class PostsContract {
 
     private UUID postId;
-    private UUID authorId;
+    private UUID userId;
     private String content;
     private List<String> hashtags;
     private String mediaUrl;
