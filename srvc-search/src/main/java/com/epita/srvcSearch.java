@@ -85,10 +85,21 @@ public class srvcSearch {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     public Response search(String search_message) {
-        List<String> hashtags = SearchService.extract_hashtags(search_message);
         List<PostContract> posts = new ArrayList<>();
         try {
-            posts = elasticSearchReastClient.search_post_by_hashtags(hashtags);
+            /* userName search 
+            for (String word: search_message.split(" ")) {
+                List<UsersContract> users = elasticSearchReastClient.search_user_by_name(word);
+                for (UsersContract user: users) {
+                    List<PostContract> temp = elasticSearchReastClient.search_post_by_user(user.getUserId());
+                    posts.addAll(temp);
+
+                }
+            }*/
+            
+            /* hashtags search
+            List<String> hashtags = SearchService.extract_hashtags(search_message);
+            posts = elasticSearchReastClient.search_post_by_hashtags(hashtags);*/
         } catch (Exception e) {
             return Response.status(400).entity(e.getMessage() + "Can't search").build();
         }
