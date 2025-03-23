@@ -29,7 +29,6 @@ import co.elastic.clients.elasticsearch._types.query_dsl.QueryBuilders;
 @ApplicationScoped
 public class ElasticSearchRestClient {
 
-
     @Inject
     ElasticsearchClient elasticsearchClient;
 
@@ -57,6 +56,12 @@ public class ElasticSearchRestClient {
     public List<UsersContract> search_user_by_id(UUID userId) throws IOException {
         SearchRequest searchRequest = SearchRequest.of( b -> b.index("users").query(QueryBuilders.matchPhrase().field("userId").query(userId.toString()).build()._toQuery()));
         List<UsersContract> searchResponse = elasticsearchClient.search(searchRequest, UsersContract.class).hits().hits().stream().map(hit -> hit.source()).collect(java.util.stream.Collectors.toList());
+        return searchResponse;
+    }
+
+    public List<PostContract> search_post_by_hashtags(List<String> hashtags) throws IOException {
+        SearchRequest searchRequest = SearchRequest.of( b -> b.index("posts").query(QueryBuilders.matchPhrase().field("hashtags").query(hashtags.toString()).build()._toQuery()));
+        List<PostContract> searchResponse = elasticsearchClient.search(searchRequest, PostContract.class).hits().hits().stream().map(hit -> hit.source()).collect(java.util.stream.Collectors.toList());
         return searchResponse;
     }
     public List<UsersContract> search_post(UUID userId) throws IOException {
