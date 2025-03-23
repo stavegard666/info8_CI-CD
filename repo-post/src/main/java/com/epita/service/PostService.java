@@ -5,6 +5,7 @@ import com.epita.repository.DeletePublisher;
 import com.epita.repository.PostPublisher;
 import com.epita.repository.PostRepository;
 import com.epita.repository.UserRepository;
+import com.epita.repository.entity.PostsEntity;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -63,18 +64,18 @@ public class PostService {
             }
         }
 
-        if (contract.getPostId() == null) {
-            contract.setPostId(UUID.randomUUID());
-        }
-
-        if (contract.getCreatedAt() == null) {
-            contract.setCreatedAt(Instant.now());
-        }
-
         if (contract.getUserId() == null || userRepository.findUserById(contract.getUserId()).isEmpty()) {
             builder.append("Valid userId is required.");
             return Optional.empty(); // Valid userId is required.
         }
+
+        // if (contract.getPostId() == null) {
+        //     contract.setPostId(UUID.randomUUID());
+        // }
+
+        // if (contract.getCreatedAt() == null) {
+        //     contract.setCreatedAt(Instant.now());
+        // }
 
         Pattern pattern = Pattern.compile("#\\w+");
         Matcher matcher = pattern.matcher(contract.getContent());
@@ -84,24 +85,27 @@ public class PostService {
         }
         contract.setHashtags(hashtags);
 
-        postRepository.savePost(contract);
-        postPublisher.publish(contract);
-        return Optional.of(contract);
+        PostsEntity postsEntity = new PostsEntity(contract);
+        postsEntity.persist();
+        postPublisher.publish(postsEntity.toContract());
+
+
+        return Optional.of(postsEntity.toContract());
     }
 
     public int deleteOwnPost(UUID userId, UUID postId) {
-        Optional<PostsContract> optionalPost = postRepository.getPostById(postId);
+        Optional<PostsEntity> optionalPost = postRepository.getPostById(postId);
         if (optionalPost.isEmpty()) {
             return 1;
         }
 
-        PostsContract post = optionalPost.get();
+        PostsEntity post = optionalPost.get();
         if (!post.getUserId().equals(userId)) {
             return 2;
         }
 
         postRepository.delete(post);
-        deletePublisher.publish(post);
+        deletePublisher.publish(post.toContract());
 
         return 0;
     }
@@ -111,14 +115,14 @@ public class PostService {
             return Collections.emptyList(); // User not found.
         }
 
-        return postRepository.getUserPosts(userId);
+        return postRepository.getUserPosts(userId).stream().map(PostsEntity::toContract).toList();
     }
 
     public Optional<PostsContract> getPost(UUID postId) {
-        return postRepository.getPostById(postId);
+        return postRepository.getPostById(postId).map(PostsEntity::toContract);
     }
 
     public Optional<PostsContract> getReplyPost(UUID postId) {
-        return postRepository.getReplyPost(postId);
+        return postRepository.getReplyPost(postId).map(PostsEntity::toContract);
     }
 }
