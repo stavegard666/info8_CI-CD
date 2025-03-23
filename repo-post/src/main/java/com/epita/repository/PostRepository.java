@@ -1,6 +1,7 @@
 package com.epita.repository;
 
-import com.epita.contracts.PostsContract;
+import com.epita.repository.entity.PostsEntity;
+
 import io.quarkus.mongodb.panache.PanacheMongoRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 
@@ -9,21 +10,21 @@ import java.util.Optional;
 import java.util.UUID;
 
 @ApplicationScoped
-public class PostRepository implements PanacheMongoRepository<PostsContract> {
+public class PostRepository implements PanacheMongoRepository<PostsEntity> {
 
-    public List<PostsContract> getUserPosts(UUID userId) {
+    public List<PostsEntity> getUserPosts(UUID userId) {
         return find("userId", userId).list();
     }
 
-    public Optional<PostsContract>                                                                                                                                                                                                                                                          getPostById(UUID postId) {
+    public Optional<PostsEntity>                                                                                                                                                                                                                                                          getPostById(UUID postId) {
         return find("postId", postId).firstResultOptional();
     }
 
-    public Optional<PostsContract> getReplyPost(UUID postId) {
+    public Optional<PostsEntity> getReplyPost(UUID postId) {
         return find("replyTo", postId).firstResultOptional();
     }
     
-    public void savePost(PostsContract post) {
+    public void savePost(PostsEntity post) {
         persist(post);
     }
 }
