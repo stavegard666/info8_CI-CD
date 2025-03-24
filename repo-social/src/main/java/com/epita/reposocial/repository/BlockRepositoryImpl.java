@@ -11,23 +11,22 @@ import java.util.UUID;
 public class BlockRepositoryImpl implements PanacheMongoRepository<BlockEntity> {
 
     public List<BlockEntity> findBlockersByUserId(UUID userId) {
-        return list("blockedId", userId);
+        return list("blockedId", userId.toString());
     }
 
     public List<BlockEntity> findBlockedByUserId(UUID userId) {
-        return list("blockerId", userId);
+        return list("blockerId", userId.toString());
     }
 
     public void deleteBlock(UUID blockerId, UUID blockedId) {
-        delete("blockerId = ?1 and blockedId = ?2", blockerId, blockedId);
+        delete("blockerId = ?1 and blockedId = ?2", blockerId.toString(), blockedId.toString());
     }
 
     public boolean exists(UUID blockerId, UUID blockedId) {
-        return count("blockerId = ?1 and blockedId = ?2", blockerId, blockedId) > 0;
+        return count("blockerId = ?1 and blockedId = ?2", blockerId.toString(), blockedId.toString()) > 0;
     }
 
     public boolean hasBlockRelationship(UUID user1, UUID user2) {
-        return count("(blockerId = ?1 and blockedId = ?2) or (blockerId = ?2 and blockedId = ?1)",
-                user1, user2) > 0;
+        return exists(user1, user2) || exists(user2, user1);
     }
 }

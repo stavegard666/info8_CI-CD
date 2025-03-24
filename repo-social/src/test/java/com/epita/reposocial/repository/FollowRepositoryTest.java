@@ -58,8 +58,8 @@ class FollowRepositoryTest {
 
         // Then
         assertEquals(1, followers.size());
-        assertEquals(followerId, followers.get(0).followerId);
-        assertEquals(followedId, followers.get(0).followedId);
+        assertEquals(followerId.toString(), followers.get(0).followerId);
+        assertEquals(followedId.toString(), followers.get(0).followedId);
     }
 
     @Test
@@ -72,8 +72,8 @@ class FollowRepositoryTest {
 
         // Then
         assertEquals(1, following.size());
-        assertEquals(followerId, following.get(0).followerId);
-        assertEquals(followedId, following.get(0).followedId);
+        assertEquals(followerId.toString(), following.get(0).followerId);
+        assertEquals(followedId.toString(), following.get(0).followedId);
     }
 
     @Test

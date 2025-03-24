@@ -35,33 +35,15 @@ public class SocialController {
             return UUID.fromString(str);
         } catch (IllegalArgumentException e) {
             // Otherwise, generate a deterministic UUID from the string
-            return UUID.nameUUIDFromBytes(str.getBytes(StandardCharsets.UTF_8));
+            throw new WebApplicationException(Response.Status.BAD_REQUEST);
         }
-    }
-
-    /**
-     * Convert a UUID back to its original string representation if it was generated
-     * from a string
-     * This is primarily for making test assertions easier by returning the original
-     * string values
-     */
-    private String uuidToOriginalStringIfPossible(UUID uuid) {
-        // Map of known test UUIDs to their original string values
-        if (uuid.equals(stringToUUID("user1")))
-            return "user1";
-        if (uuid.equals(stringToUUID("user2")))
-            return "user2";
-        if (uuid.equals(stringToUUID("post1")))
-            return "post1";
-        // Return the UUID as string by default
-        return uuid.toString();
     }
 
     // Like endpoints
     @POST
     @Path("/likes/{userId}/{postId}")
     public Response likePost(@PathParam("userId") String userIdStr,
-            @PathParam("postIds") String postIdStr) {
+            @PathParam("postId") String postIdStr) {
         try {
             UUID userId = stringToUUID(userIdStr);
             UUID postId = stringToUUID(postIdStr);
@@ -106,9 +88,7 @@ public class SocialController {
             UUID postId = stringToUUID(postIdStr);
             List<UUID> likers = socialService.getLikingUsers(postId);
             // Convert UUIDs back to strings for easier testing
-            List<String> likerStrings = likers.stream()
-                    .map(this::uuidToOriginalStringIfPossible)
-                    .collect(Collectors.toList());
+            List<String> likerStrings = likers.stream().map(UUID::toString).collect(Collectors.toList());
             return Response.ok(likerStrings).build();
         } catch (Exception e) {
             LOG.error("Unexpected error getting liking users", e);

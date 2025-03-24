@@ -58,8 +58,8 @@ class BlockRepositoryTest {
 
         // Then
         assertEquals(1, blockers.size());
-        assertEquals(blockerId, blockers.get(0).blockerId);
-        assertEquals(blockedId, blockers.get(0).blockedId);
+        assertEquals(blockerId.toString(), blockers.get(0).blockerId);
+        assertEquals(blockedId.toString(), blockers.get(0).blockedId);
     }
 
     @Test
@@ -72,8 +72,8 @@ class BlockRepositoryTest {
 
         // Then
         assertEquals(1, blocked.size());
-        assertEquals(blockerId, blocked.get(0).blockerId);
-        assertEquals(blockedId, blocked.get(0).blockedId);
+        assertEquals(blockerId.toString(), blocked.get(0).blockerId);
+        assertEquals(blockedId.toString(), blocked.get(0).blockedId);
     }
 
     @Test

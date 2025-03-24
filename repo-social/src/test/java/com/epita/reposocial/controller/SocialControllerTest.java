@@ -1,14 +1,18 @@
 package com.epita.reposocial.controller;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
+import io.quarkus.test.common.QuarkusTestResource;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -109,6 +113,9 @@ class SocialControllerTest {
     void testGetLikingUsers() {
         // Given
         List<UUID> users = Arrays.asList(userId);
+        List<String> output = users.stream()
+                .map(UUID::toString)
+                .collect(Collectors.toList());
         when(socialService.getLikingUsers(postId)).thenReturn(users);
 
         // When
@@ -116,7 +123,7 @@ class SocialControllerTest {
 
         // Then
         assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
-        assertEquals(users, response.getEntity());
+        assertIterableEquals(output, (List<?>) response.getEntity());
     }
 
     @Test

@@ -59,8 +59,8 @@ class LikeRepositoryTest {
 
         // Then
         assertEquals(1, likes.size());
-        assertEquals(userId, likes.get(0).userId);
-        assertEquals(postId, likes.get(0).postId);
+        assertEquals(userId.toString(), likes.get(0).userId);
+        assertEquals(postId.toString(), likes.get(0).postId);
     }
 
     @Test
@@ -73,8 +73,8 @@ class LikeRepositoryTest {
 
         // Then
         assertEquals(1, likes.size());
-        assertEquals(userId, likes.get(0).userId);
-        assertEquals(postId, likes.get(0).postId);
+        assertEquals(userId.toString(), likes.get(0).userId);
+        assertEquals(postId.toString(), likes.get(0).postId);
     }
 
     @Test

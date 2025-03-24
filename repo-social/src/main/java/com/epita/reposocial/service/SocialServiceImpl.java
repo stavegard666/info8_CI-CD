@@ -84,14 +84,14 @@ public class SocialServiceImpl {
     public List<UUID> getLikingUsers(UUID postId) {
         return likeRepository.findByPostId(postId)
                 .stream()
-                .map(like -> like.userId)
+                .map(like -> UUID.fromString(like.userId))
                 .collect(Collectors.toList());
     }
 
     public List<UUID> getUserLikedPosts(UUID userId) {
         return likeRepository.findByUserId(userId)
                 .stream()
-                .map(like -> like.postId)
+                .map(like -> UUID.fromString(like.postId))
                 .collect(Collectors.toList());
     }
 
@@ -137,14 +137,14 @@ public class SocialServiceImpl {
     public List<UUID> getUserFollowers(UUID userId) {
         return followRepository.findFollowersByUserId(userId)
                 .stream()
-                .map(follow -> follow.followerId)
+                .map(follow -> UUID.fromString(follow.followerId))
                 .collect(Collectors.toList());
     }
 
     public List<UUID> getUserFollowing(UUID userId) {
         return followRepository.findFollowedByUserId(userId)
                 .stream()
-                .map(follow -> follow.followedId)
+                .map(follow -> UUID.fromString(follow.followedId))
                 .collect(Collectors.toList());
     }
 
@@ -183,14 +183,14 @@ public class SocialServiceImpl {
     public List<UUID> getUserBlocked(UUID userId) {
         return blockRepository.findBlockedByUserId(userId)
                 .stream()
-                .map(block -> block.blockedId)
+                .map(block -> UUID.fromString(block.blockedId))
                 .collect(Collectors.toList());
     }
 
     public List<UUID> getUserBlockers(UUID userId) {
         return blockRepository.findBlockersByUserId(userId)
                 .stream()
-                .map(block -> block.blockerId)
+                .map(block -> UUID.fromString(block.blockerId))
                 .collect(Collectors.toList());
     }
 

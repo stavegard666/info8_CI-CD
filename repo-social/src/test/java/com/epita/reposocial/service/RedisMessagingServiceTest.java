@@ -45,7 +45,7 @@ class RedisMessagingServiceTest {
         LikesContract like = new LikesContract();
         like.setUserId(UUID.randomUUID());
         like.setPostId(UUID.randomUUID());
-        like.setLikedAt(new Date(System.currentTimeMillis()));
+        like.setLikedAt(new Date(System.currentTimeMillis()).toInstant());
 
         // When
         UniAssertSubscriber<Void> subscriber = service.publishLikeCreated(like)
@@ -77,7 +77,7 @@ class RedisMessagingServiceTest {
         FollowsContract follow = new FollowsContract();
         follow.setFollowerId(UUID.randomUUID());
         follow.setFolloweeId(UUID.randomUUID());
-        follow.setFollowedAt(new Date(System.currentTimeMillis()));
+        follow.setFollowedAt(new Date(System.currentTimeMillis()).toInstant());
 
         // When
         UniAssertSubscriber<Void> subscriber = service.publishFollowCreated(follow)
@@ -109,7 +109,7 @@ class RedisMessagingServiceTest {
         BlocksUserContract block = new BlocksUserContract();
         block.setBlockerId(UUID.randomUUID());
         block.setBlockedId(UUID.randomUUID());
-        block.setBlockedAt(new Date(System.currentTimeMillis()));
+        block.setBlockedAt(new Date(System.currentTimeMillis()).toInstant());
 
         // When
         UniAssertSubscriber<Void> subscriber = service.publishBlockCreated(block)

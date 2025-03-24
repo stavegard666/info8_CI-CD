@@ -11,18 +11,18 @@ import java.util.UUID;
 public class LikeRepositoryImpl implements PanacheMongoRepository<LikeEntity> {
 
     public List<LikeEntity> findByUserId(UUID userId) {
-        return list("userId", userId);
+        return list("userId", userId.toString());
     }
 
     public List<LikeEntity> findByPostId(UUID postId) {
-        return list("postId", postId);
+        return list("postId", postId.toString());
     }
 
     public void deleteLike(UUID userId, UUID postId) {
-        delete("userId = ?1 and postId = ?2", userId, postId);
+        delete("userId = ?1 and postId = ?2", userId.toString(), postId.toString());
     }
 
     public boolean exists(UUID userId, UUID postId) {
-        return count("userId = ?1 and postId = ?2", userId, postId) > 0;
+        return count("userId = ?1 and postId = ?2", userId.toString(), postId.toString()) > 0;
     }
 }
