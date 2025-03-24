@@ -61,7 +61,7 @@ public class SocialController {
     @POST
     @Path("/likes/{userId}/{postId}")
     public Response likePost(@PathParam("userId") String userIdStr,
-            @PathParam("postId") String postIdStr) {
+            @PathParam("postIds") String postIdStr) {
         try {
             UUID userId = stringToUUID(userIdStr);
             UUID postId = stringToUUID(postIdStr);
