@@ -8,7 +8,6 @@ import java.util.UUID;
 
 @MongoEntity(collection = "blocks")
 public class BlockEntity {
-    @BsonProperty("_id")
     public String blockerId;
     public String blockedId;
     public Date blockedAt;

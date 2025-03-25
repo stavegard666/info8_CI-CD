@@ -8,7 +8,6 @@ import java.util.UUID;
 
 @MongoEntity(collection = "likes")
 public class LikeEntity {
-    @BsonProperty("_id")
     public String userId;
     public String postId;
     public Date likedAt;

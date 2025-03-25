@@ -8,7 +8,6 @@ import java.util.UUID;
 
 @MongoEntity(collection = "follows")
 public class FollowEntity {
-    @BsonProperty("_id")
     public String followerId;
     public String followedId;
     public Date followedAt;
