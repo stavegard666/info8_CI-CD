@@ -5,6 +5,7 @@ import java.util.function.Consumer;
 import org.jboss.logging.Logger;
 
 import com.epita.contracts.PostsContract;
+import com.epita.service.UserTimeLineService;
 
 import io.quarkus.redis.datasource.ReactiveRedisDataSource;
 import io.quarkus.redis.datasource.pubsub.ReactivePubSubCommands;
@@ -22,6 +23,8 @@ public class DeletePostSubscriber implements Consumer<PostsContract> {
     private final ReactivePubSubCommands<PostsContract> subscriber;
     private static final Logger LOG = Logger.getLogger(DeletePostSubscriber.class);
 
+    @Inject
+    UserTimeLineService userTimeLineService;
 
     @Inject
     public DeletePostSubscriber(ReactiveRedisDataSource ds) { 
@@ -32,7 +35,8 @@ public class DeletePostSubscriber implements Consumer<PostsContract> {
 
     @Override
     public void accept(PostsContract postsContract) {
-        LOG.info("Accepting Delete PostContract result");  
+        LOG.info("Accepting Delete PostContract result"); 
+        userTimeLineService.deletePostToTimeline(postsContract); 
     }
 
 

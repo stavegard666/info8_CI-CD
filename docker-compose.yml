@@ -57,7 +57,7 @@ services:
       context: ./repo-post
     container_name: repo-post
     ports:
-      - "30081:8081"
+      - "8081:8081"
     depends_on:
       - mongodb
     networks:

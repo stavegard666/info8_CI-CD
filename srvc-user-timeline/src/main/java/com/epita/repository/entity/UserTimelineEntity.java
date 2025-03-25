@@ -5,26 +5,23 @@ import java.util.UUID;
 
 import org.bson.codecs.pojo.annotations.BsonProperty;
 
-import com.epita.contracts.UserTimelineContract;
+import com.epita.contracts.PostsContract;
 
+import io.quarkus.mongodb.panache.PanacheMongoEntityBase;
 import io.quarkus.mongodb.panache.common.MongoEntity;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 @MongoEntity(collection="user-timeline")
 @Data
+@EqualsAndHashCode(callSuper = false)
 @AllArgsConstructor
-public class UserTimelineEntity {
+@NoArgsConstructor
+public class UserTimelineEntity extends PanacheMongoEntityBase {
     
     @BsonProperty("_id")
     UUID userId;
-    List<PostsEntity> posts;
-    List<LikesEntity> likes;
-
-
-    public UserTimelineContract toContract() {
-        List<com.epita.contracts.PostsContract> posts = this.posts.stream().map(PostsEntity::toContract).toList();
-        List<com.epita.contracts.LikesContract> likes = this.likes.stream().map(LikesEntity::toContract).toList();
-        return new UserTimelineContract();
-    }
+    List<PostsContract> timeline;
 }
