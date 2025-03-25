@@ -26,6 +26,7 @@ import jakarta.ws.rs.core.Response;
 import co.elastic.clients.elasticsearch.ElasticsearchAsyncClient;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.query_dsl.QueryBuilders;
+
 @ApplicationScoped
 public class ElasticSearchRestClient {
 

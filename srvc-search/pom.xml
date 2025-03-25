@@ -31,5 +31,10 @@
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-elasticsearch-java-client</artifactId>
     </dependency>
+    <dependency>
+      <groupId>com.epita</groupId>
+      <artifactId>shared-contracts</artifactId>
+      <version>1.0.0-SNAPSHOT</version>
+    </dependency>
   </dependencies>
 </project>
