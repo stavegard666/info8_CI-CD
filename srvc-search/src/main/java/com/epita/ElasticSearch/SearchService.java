@@ -16,4 +16,14 @@ public class SearchService {
             }
         return result;
     }
+
+    public static String remove_hashtags(String inputString) {
+        List<String> result = new ArrayList<String>();
+            for (String input: inputString.split(" ")) {
+                if (!input.startsWith("#")) {
+                    result.add(input);
+                }
+            }
+        return String.join(" ", result);
+    }
 }

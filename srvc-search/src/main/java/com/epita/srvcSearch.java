@@ -30,6 +30,7 @@ public class srvcSearch {
         return Response.ok().build();
     }
 
+
     @POST
     @Path("/add_post")
     @Produces(MediaType.APPLICATION_JSON)
@@ -37,6 +38,10 @@ public class srvcSearch {
     public Response add_post(List<PostContract> postContracts) {
         String response = "";
         try {
+            if (!elasticSearchReastClient.indexExists("posts"))
+            {
+                elasticSearchReastClient.create_posts_with_analyzer();
+            }
             for(PostContract postContract : postContracts) {
                 List<UsersContract> users = elasticSearchReastClient.search_user_by_id(postContract.getAuthorId());
                 if(users.size() == 0) {
@@ -58,6 +63,10 @@ public class srvcSearch {
     public Response add_user(List<UsersContract> usersContracts) {
         String response = "";
         try {
+            if (!elasticSearchReastClient.indexExists("users"))
+            {
+                elasticSearchReastClient.create_users_with_analyzer();
+            }
             for(UsersContract usersContract : usersContracts) {
                 elasticSearchReastClient.insert_user(usersContract);
                 response += String.format("User %s(%s) inserted,\n", usersContract.getUserName(),usersContract.getUserId());
@@ -86,6 +95,9 @@ public class srvcSearch {
     @Consumes(MediaType.APPLICATION_JSON)
     public Response search(String search_message) {
         List<PostContract> posts = new ArrayList<>();
+        List<String> hashtags = SearchService.extract_hashtags(search_message);
+        String content = SearchService.remove_hashtags(search_message);
+        List<UUID> users_name = new ArrayList<>();
         try {
             /* userName search 
             for (String word: search_message.split(" ")) {
@@ -100,6 +112,15 @@ public class srvcSearch {
             /* hashtags search
             List<String> hashtags = SearchService.extract_hashtags(search_message);
             posts = elasticSearchReastClient.search_post_by_hashtags(hashtags);*/
+
+            for (String word: search_message.split(" ")) {
+                List<UsersContract> users = elasticSearchReastClient.search_user_by_name(word);
+                for (UsersContract user: users) {
+                    users_name.add(user.getUserId());
+                }
+            }   
+            posts = elasticSearchReastClient.search_all(content, hashtags, users_name);
+
         } catch (Exception e) {
             return Response.status(400).entity(e.getMessage() + "Can't search").build();
         }
