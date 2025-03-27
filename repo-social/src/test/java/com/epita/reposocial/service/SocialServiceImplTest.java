@@ -16,6 +16,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
+import com.epita.reposocial.repository.Neo4jSocialRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -54,6 +55,9 @@ class SocialServiceImplTest {
 
     @Mock
     RedisMessagingService redisMessagingService;
+
+    @Mock
+    Neo4jSocialRepository neo4jSocialRepository;
 
     @Mock
     SocialMapper socialMapper;
@@ -121,8 +125,8 @@ class SocialServiceImplTest {
 
         // Then
         assertNotNull(result);
-        assertEquals(userId, result.userId);
-        assertEquals(postId, result.postId);
+        assertEquals(userId.toString(), result.userId);
+        assertEquals(postId.toString(), result.postId);
         verify(likeRepository).persist(any(LikeEntity.class));
         verify(redisMessagingService).publishLikeCreated(any(LikesContract.class));
     }
@@ -202,8 +206,8 @@ class SocialServiceImplTest {
 
         // Then
         assertNotNull(result);
-        assertEquals(followerId, result.followerId);
-        assertEquals(followedId, result.followedId);
+        assertEquals(followerId.toString(), result.followerId);
+        assertEquals(followedId.toString(), result.followedId);
         verify(followRepository).persist(any(FollowEntity.class));
         verify(redisMessagingService).publishFollowCreated(any(FollowsContract.class));
     }
@@ -251,8 +255,8 @@ class SocialServiceImplTest {
 
         // Then
         assertNotNull(result);
-        assertEquals(blockerId, result.blockerId);
-        assertEquals(blockedId, result.blockedId);
+        assertEquals(blockerId.toString(), result.blockerId);
+        assertEquals(blockedId.toString(), result.blockedId);
         verify(blockRepository).persist(any(BlockEntity.class));
         verify(redisMessagingService).publishBlockCreated(any(BlocksUserContract.class));
     }

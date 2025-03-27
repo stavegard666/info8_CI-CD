@@ -4,7 +4,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.sql.Date;
+import java.util.Date;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;

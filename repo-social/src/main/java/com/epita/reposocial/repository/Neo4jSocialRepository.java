@@ -152,7 +152,7 @@ public class Neo4jSocialRepository {
             if (result.hasNext()) {
                 return result.next().get("distance").asInt();
             }
-            return -1; // -1 means no path found
+            return -1;
         }
     }
 
