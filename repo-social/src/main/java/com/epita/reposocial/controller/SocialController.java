@@ -296,4 +296,62 @@ public class SocialController {
                     .build();
         }
     }
+
+    // Social distance endpoints
+    @GET
+    @Path("/distance/{user1Id}/{user2Id}")
+    public Response getSocialDistance(@PathParam("user1Id") String user1IdStr,
+            @PathParam("user2Id") String user2IdStr) {
+        try {
+            UUID user1Id = stringToUUID(user1IdStr);
+            UUID user2Id = stringToUUID(user2IdStr);
+
+            int distance = socialService.getSocialDistance(user1Id, user2Id);
+            if (distance == -1) {
+                return Response.status(Response.Status.NOT_FOUND)
+                        .entity("No path found between users")
+                        .build();
+            }
+
+            return Response.ok(distance).build();
+        } catch (WebApplicationException e) {
+            LOG.error("Error getting social distance", e);
+            return Response.status(e.getResponse().getStatus())
+                    .entity(e.getMessage())
+                    .build();
+        } catch (Exception e) {
+            LOG.error("Unexpected error getting social distance", e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity("An unexpected error occurred")
+                    .build();
+        }
+    }
+
+    @GET
+    @Path("/users-at-distance/{userId}/{distance}")
+    public Response getUsersAtDistance(@PathParam("userId") String userIdStr,
+            @PathParam("distance") int distance) {
+        try {
+            UUID userId = stringToUUID(userIdStr);
+
+            if (distance < 1) {
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity("Distance must be greater than 0")
+                        .build();
+            }
+
+            List<UUID> users = socialService.getUsersAtDistance(userId, distance);
+            return Response.ok(users).build();
+        } catch (WebApplicationException e) {
+            LOG.error("Error getting users at distance", e);
+            return Response.status(e.getResponse().getStatus())
+                    .entity(e.getMessage())
+                    .build();
+        } catch (Exception e) {
+            LOG.error("Unexpected error getting users at distance", e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity("An unexpected error occurred")
+                    .build();
+        }
+    }
 }

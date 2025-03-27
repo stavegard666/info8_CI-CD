@@ -10,10 +10,10 @@ import com.epita.reposocial.mapper.SocialMapper;
 import com.epita.reposocial.repository.BlockRepositoryImpl;
 import com.epita.reposocial.repository.FollowRepositoryImpl;
 import com.epita.reposocial.repository.LikeRepositoryImpl;
+import com.epita.reposocial.repository.Neo4jSocialRepository;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.transaction.Transactional;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 import org.jboss.logging.Logger;
@@ -36,13 +36,15 @@ public class SocialServiceImpl {
     BlockRepositoryImpl blockRepository;
 
     @Inject
+    Neo4jSocialRepository neo4jRepository;
+
+    @Inject
     RedisMessagingService redisMessagingService;
 
     @Inject
     SocialMapper socialMapper;
 
     // Like operations
-    @Transactional
     public LikeEntity likePost(UUID userId, UUID postId) {
         // Check if there's a block relationship
         if (hasBlockRelationshipBetweenUserAndPost(userId, postId)) {
@@ -69,7 +71,6 @@ public class SocialServiceImpl {
         return like;
     }
 
-    @Transactional
     public void unlikePost(UUID userId, UUID postId) {
         LOG.info("User " + userId + " is unliking post " + postId);
         likeRepository.deleteLike(userId, postId);
@@ -96,7 +97,6 @@ public class SocialServiceImpl {
     }
 
     // Follow operations
-    @Transactional
     public FollowEntity followUser(UUID followerId, UUID followedId) {
         if (blockRepository.hasBlockRelationship(followerId, followedId)) {
             LOG.warn("Follow attempt blocked: Block relationship exists between " + followerId + " and " + followedId);
@@ -112,6 +112,9 @@ public class SocialServiceImpl {
         FollowEntity follow = new FollowEntity(followerId, followedId);
         followRepository.persist(follow);
 
+        // Update Neo4j graph
+        neo4jRepository.createFollow(followerId, followedId);
+
         // Publish event asynchronously
         FollowsContract followContract = socialMapper.toFollowsContract(follow);
         redisMessagingService.publishFollowCreated(followContract)
@@ -122,10 +125,12 @@ public class SocialServiceImpl {
         return follow;
     }
 
-    @Transactional
     public void unfollowUser(UUID followerId, UUID followedId) {
         LOG.info("User " + followerId + " is unfollowing " + followedId);
         followRepository.deleteFollow(followerId, followedId);
+
+        // Update Neo4j graph
+        neo4jRepository.deleteFollow(followerId, followedId);
 
         // Publish event asynchronously
         redisMessagingService.publishFollowDeleted(followerId, followedId)
@@ -135,25 +140,23 @@ public class SocialServiceImpl {
     }
 
     public List<UUID> getUserFollowers(UUID userId) {
-        return followRepository.findFollowersByUserId(userId)
-                .stream()
-                .map(follow -> UUID.fromString(follow.followerId))
-                .collect(Collectors.toList());
+        // Use Neo4j for better performance with graph queries
+        return neo4jRepository.getFollowers(userId);
     }
 
     public List<UUID> getUserFollowing(UUID userId) {
-        return followRepository.findFollowedByUserId(userId)
-                .stream()
-                .map(follow -> UUID.fromString(follow.followedId))
-                .collect(Collectors.toList());
+        // Use Neo4j for better performance with graph queries
+        return neo4jRepository.getFollowing(userId);
     }
 
     // Block operations
-    @Transactional
     public BlockEntity blockUser(UUID blockerId, UUID blockedId) {
         LOG.info("User " + blockerId + " is blocking " + blockedId);
         BlockEntity block = new BlockEntity(blockerId, blockedId);
         blockRepository.persist(block);
+
+        // Update Neo4j graph
+        neo4jRepository.createBlock(blockerId, blockedId);
 
         // Publish block event
         BlocksUserContract blockContract = socialMapper.toBlocksUserContract(block);
@@ -168,10 +171,12 @@ public class SocialServiceImpl {
         return block;
     }
 
-    @Transactional
     public void unblockUser(UUID blockerId, UUID blockedId) {
         LOG.info("User " + blockerId + " is unblocking " + blockedId);
         blockRepository.deleteBlock(blockerId, blockedId);
+
+        // Update Neo4j graph
+        neo4jRepository.deleteBlock(blockerId, blockedId);
 
         // Publish unblock event
         redisMessagingService.publishBlockDeleted(blockerId, blockedId)
@@ -181,17 +186,22 @@ public class SocialServiceImpl {
     }
 
     public List<UUID> getUserBlocked(UUID userId) {
-        return blockRepository.findBlockedByUserId(userId)
-                .stream()
-                .map(block -> UUID.fromString(block.blockedId))
-                .collect(Collectors.toList());
+        // Use Neo4j for better performance with graph queries
+        return neo4jRepository.getBlockedUsers(userId);
     }
 
     public List<UUID> getUserBlockers(UUID userId) {
-        return blockRepository.findBlockersByUserId(userId)
-                .stream()
-                .map(block -> UUID.fromString(block.blockerId))
-                .collect(Collectors.toList());
+        // Use Neo4j for better performance with graph queries
+        return neo4jRepository.getBlockingUsers(userId);
+    }
+
+    // Social distance operations
+    public int getSocialDistance(UUID user1Id, UUID user2Id) {
+        return neo4jRepository.getSocialDistance(user1Id, user2Id);
+    }
+
+    public List<UUID> getUsersAtDistance(UUID userId, int distance) {
+        return neo4jRepository.getUsersAtDistance(userId, distance);
     }
 
     // Helper methods
@@ -212,6 +222,8 @@ public class SocialServiceImpl {
         new Thread(() -> {
             try {
                 followRepository.deleteAllFollowsBetweenUsers(user1, user2);
+                neo4jRepository.deleteFollow(user1, user2);
+                neo4jRepository.deleteFollow(user2, user1);
                 LOG.info("Successfully removed follow relationships between " + user1 + " and " + user2);
             } catch (Exception e) {
                 LOG.error("Failed to remove follow relationships", e);
