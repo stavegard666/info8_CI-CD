@@ -3,8 +3,8 @@ package com.epita.ElasticSearch;
 import java.io.IOException;
 import java.util.function.Consumer;
 
-import com.epita.ElasticSearch.contracts.PostContract;
-
+import com.epita.contracts.PostsContract;
+import com.epita.contracts.UsersContract;
 import io.quarkus.redis.datasource.RedisDataSource;
 import io.quarkus.redis.datasource.pubsub.PubSubCommands;
 import io.quarkus.runtime.Startup;
@@ -14,7 +14,7 @@ import jakarta.inject.Inject;
 
 @Startup
 @ApplicationScoped
-public class ElasticSearchSubscriber implements Consumer<PostContract> {
+public class ElasticSearchSubscriber implements Consumer<PostsContract> {
     
     private final PubSubCommands.RedisSubscriber subscriber;
 
@@ -25,11 +25,11 @@ public class ElasticSearchSubscriber implements Consumer<PostContract> {
     Vertx vertx;
 
     public ElasticSearchSubscriber(RedisDataSource ds) {
-        this.subscriber = ds.pubsub(PostContract.class).subscribe("posts", this::accept);
+        this.subscriber = ds.pubsub(PostsContract.class).subscribe("posts", this::accept);
     }
 
     @Override
-    public void accept(PostContract post) {
+    public void accept(PostsContract post) {
         vertx.executeBlocking(future -> {
             try {
                 elasticSearchRestClient.insert_post(post);

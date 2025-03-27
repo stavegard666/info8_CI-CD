@@ -8,8 +8,10 @@ import java.util.Map;
 import java.util.UUID;
 
 import com.arjuna.ats.internal.jdbc.drivers.modifiers.list;
-import com.epita.ElasticSearch.contracts.PostContract;
-import com.epita.ElasticSearch.contracts.UsersContract;
+import com.epita.contracts.PostsContract;
+import com.epita.contracts.UsersContract;
+import com.epita.ElasticSearch.contracts.PostContractElasticSearch;
+import com.epita.contracts.LikesContract;
 import com.oracle.svm.core.annotate.Delete;
 
 import co.elastic.clients.elasticsearch.core.CreateRequest;
@@ -40,6 +42,9 @@ public class ElasticSearchRestClient {
     @Inject
     ElasticsearchClient elasticsearchClient;
 
+    @Inject
+    PostContractElasticSearch postContractElasticSearch;
+
     public boolean indexExists(String indexName) throws IOException {
         return elasticsearchClient.indices().exists(e -> e.index(indexName)).value();
     }
@@ -51,13 +56,14 @@ public class ElasticSearchRestClient {
             .settings(s -> s
                 .analysis(a -> a
                     .analyzer("posts_analyzer", custom -> custom
-                        .custom(ce -> ce.tokenizer("standard").filter("lowercase", "asciifolding", "classic", "decimal_digit"))
+                        .custom(ce -> ce.tokenizer("standard").filter("lowercase", "asciifolding", "classic", "decimal_digit", "elision"))
                     )
                 )
             )
 
         );
     }
+
 
     public void create_users_with_analyzer() throws IOException {
         // Crée un index avec un analyzer personnalisé
@@ -74,12 +80,19 @@ public class ElasticSearchRestClient {
         );
     }
 
-    public void insert_post(PostContract postContract) throws IOException {
-        IndexRequest<PostContract> request = IndexRequest.of(  
+    public void create_likes() throws IOException {
+        // Crée un index avec un analyzer personnalisé
+        CreateIndexResponse createIndexResponse = elasticsearchClient.indices().create(c -> c
+            .index("likes")
+        );
+    }
+
+    public void insert_post(PostsContract postContract) throws IOException {
+        PostContractElasticSearch postContract2 = postContractElasticSearch.fromPostsContract(postContract);
+        IndexRequest<PostContractElasticSearch> request = IndexRequest.of(  
             b -> b.index("posts")
-                
                 .id(postContract.getPostId().toString())
-                .document(postContract)); 
+                .document(postContract2)); 
         elasticsearchClient.index(request);  
     }
 
@@ -91,6 +104,13 @@ public class ElasticSearchRestClient {
         elasticsearchClient.index(request);  
     }
 
+    public void insert_likes(LikesContract likesContract) throws IOException {
+        IndexRequest<LikesContract> request = IndexRequest.of(  
+            b -> b.index("likes")
+                .id(likesContract.getId().toString())
+                .document(likesContract)); 
+        elasticsearchClient.index(request);  
+    }
     public String delete_by_id(String name, UUID userId) throws IOException {
         DeleteRequest searchRequest = DeleteRequest.of( b -> b.index(name).id(userId.toString()));
         String searchResponse = elasticsearchClient.delete(searchRequest).result().toString();
@@ -107,18 +127,22 @@ public class ElasticSearchRestClient {
         return searchResponse;
     }
 
-    public List<PostContract> search_post_by_hashtags(List<String> hashtags) throws IOException {
+    public List<PostContractElasticSearch> search_post_by_hashtags(List<String> hashtags) throws IOException {
         SearchRequest searchRequest = SearchRequest.of( b -> b.index("posts").query(QueryBuilders.match().field("hashtags").query(hashtags.toString()).build()._toQuery()));
-        List<PostContract> searchResponse = elasticsearchClient.search(searchRequest, PostContract.class).hits().hits().stream().map(hit -> hit.source()).collect(java.util.stream.Collectors.toList());
+        List<PostContractElasticSearch> searchResponse = elasticsearchClient.search(searchRequest, PostContractElasticSearch.class).hits().hits().stream().map(hit -> hit.source()).collect(java.util.stream.Collectors.toList());
         return searchResponse;
     }
-    public List<PostContract> search_post_by_user(UUID userId) throws IOException {
+    public List<PostContractElasticSearch> search_post_by_user(UUID userId) throws IOException {
         SearchRequest searchRequest = SearchRequest.of( b -> b.index("posts").query(QueryBuilders.matchPhrase().field("authorId").query(userId.toString()).build()._toQuery()));
-        List<PostContract> searchResponse = elasticsearchClient.search(searchRequest, PostContract.class).hits().hits().stream().map(hit -> hit.source()).collect(java.util.stream.Collectors.toList());
+        List<PostContractElasticSearch> searchResponse = elasticsearchClient.search(searchRequest, PostContractElasticSearch.class).hits().hits().stream().map(hit -> hit.source()).collect(java.util.stream.Collectors.toList());
         return searchResponse;
     }
 
-    public List<PostContract> search_all(String content, List<String> hashtags, List<UUID> userIDs) throws IOException {
+    public long search_numbers_of_like_by_postid(UUID postId) throws IOException {
+        return elasticsearchClient.count(c -> c.index("likes").query(QueryBuilders.match().field("postId").query(postId.toString()).build()._toQuery())).count();
+    }
+
+    public List<PostContractElasticSearch> search_all(String content, List<String> hashtags, List<UUID> userIDs) throws IOException {
         List<Query> must_queries = new ArrayList<>();
         List<Query> should_queries = new ArrayList<>();
         for (String hashtag: hashtags) {
@@ -129,7 +153,7 @@ public class ElasticSearchRestClient {
         }
         should_queries.add(QueryBuilders.match().field("content").query(content).analyzer("posts_analyzer").fuzziness("AUTO").build()._toQuery());
         SearchRequest searchRequest = SearchRequest.of( b -> b.index("posts").query(QueryBuilders.bool().should(should_queries).must(must_queries).build()._toQuery()));
-        List<PostContract> searchResponse = elasticsearchClient.search(searchRequest, PostContract.class).hits().hits().stream().map(hit -> hit.source()).collect(java.util.stream.Collectors.toList());
+        List<PostContractElasticSearch> searchResponse = elasticsearchClient.search(searchRequest, PostContractElasticSearch.class).hits().hits().stream().map(hit -> hit.source()).collect(java.util.stream.Collectors.toList());
         return searchResponse;
     }
 

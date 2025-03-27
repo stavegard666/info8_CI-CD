@@ -12,10 +12,9 @@ import lombok.Setter;
 @Getter
 @Setter
 @AllArgsConstructor
-public class UsersContract {
-    private UUID userId;
-    private String userName;
-    private String birthDate;
-    private String location;
-
+public class UsersContractElasticSearch {
+    public UUID userId;
+    public String userName;
+    public String birthDate;
+    public String location;
 }
