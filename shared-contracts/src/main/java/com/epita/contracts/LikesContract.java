@@ -22,6 +22,14 @@ public class LikesContract {
         this.likedAt = likedAt;
     }
 
+    public UUID getId() {
+        return id;
+    }
+
+    public void setId(UUID id) {
+        this.id = id;
+    }
+
     public UUID getUserId() {
         return userId;
     }
