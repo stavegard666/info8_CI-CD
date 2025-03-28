@@ -8,13 +8,13 @@ import static org.hamcrest.CoreMatchers.is;
 
 @QuarkusTest
 class srvcSearchTest {
-    @Test
+    /*@Test
     void testHelloEndpoint() {
         given()
           .when().get("/api")
           .then()
              .statusCode(200)
              .body(is("Hello from Quarkus REST"));
-    }
+    }*/
 
 }

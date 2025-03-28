@@ -105,6 +105,16 @@ public class ElasticSearchRestClient {
     }
 
     public void insert_likes(LikesContract likesContract) throws IOException {
+        List<PostContractElasticSearch> list = search_post_by_id(likesContract.getPostId());
+        for (PostContractElasticSearch postContractElasticSearch: list ) {
+            postContractElasticSearch.setLikesNumber(postContractElasticSearch.getLikesNumber() + 1);
+            IndexRequest<PostContractElasticSearch> updateRequest = IndexRequest.of(b -> b
+            .index("posts")
+            .id(postContractElasticSearch.getPostId().toString())
+            .document(postContractElasticSearch)
+        );
+        elasticsearchClient.index(updateRequest);
+        }
         IndexRequest<LikesContract> request = IndexRequest.of(  
             b -> b.index("likes")
                 .id(likesContract.getId().toString())
@@ -137,6 +147,11 @@ public class ElasticSearchRestClient {
         List<PostContractElasticSearch> searchResponse = elasticsearchClient.search(searchRequest, PostContractElasticSearch.class).hits().hits().stream().map(hit -> hit.source()).collect(java.util.stream.Collectors.toList());
         return searchResponse;
     }
+    public List<PostContractElasticSearch> search_post_by_id(UUID id) throws IOException {
+        SearchRequest searchRequest = SearchRequest.of( b -> b.index("posts").query(QueryBuilders.matchPhrase().field("postId").query(id.toString()).build()._toQuery()));
+        List<PostContractElasticSearch> searchResponse = elasticsearchClient.search(searchRequest, PostContractElasticSearch.class).hits().hits().stream().map(hit -> hit.source()).collect(java.util.stream.Collectors.toList());
+        return searchResponse;
+    }
 
     public long search_numbers_of_like_by_postid(UUID postId) throws IOException {
         return elasticsearchClient.count(c -> c.index("likes").query(QueryBuilders.match().field("postId").query(postId.toString()).build()._toQuery())).count();
@@ -152,7 +167,10 @@ public class ElasticSearchRestClient {
             should_queries.add(QueryBuilders.match().field("authorId").query(userID.toString()).build()._toQuery());
         }
         should_queries.add(QueryBuilders.match().field("content").query(content).analyzer("posts_analyzer").fuzziness("AUTO").build()._toQuery());
-        SearchRequest searchRequest = SearchRequest.of( b -> b.index("posts").query(QueryBuilders.bool().should(should_queries).must(must_queries).build()._toQuery()));
+        SearchRequest searchRequest = SearchRequest.of( b -> b.index("posts").query(QueryBuilders.bool().should(should_queries).must(must_queries).build()._toQuery()).sort(s -> s.field(f -> f
+        .field("likesNumber")
+        .order(co.elastic.clients.elasticsearch._types.SortOrder.Desc)
+        )));
         List<PostContractElasticSearch> searchResponse = elasticsearchClient.search(searchRequest, PostContractElasticSearch.class).hits().hits().stream().map(hit -> hit.source()).collect(java.util.stream.Collectors.toList());
         return searchResponse;
     }
