@@ -25,6 +25,14 @@ public class BlocksUserContract {
         this.blockedAt = blockedAt;
     }
 
+    public UUID getId() {
+        return id;
+    }
+
+    public void setId(UUID id) {
+        this.id = id;
+    }
+
     public UUID getBlockerId() {
         return blockerId;
     }

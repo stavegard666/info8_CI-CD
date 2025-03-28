@@ -11,6 +11,7 @@ import com.arjuna.ats.internal.jdbc.drivers.modifiers.list;
 import com.epita.contracts.PostsContract;
 import com.epita.contracts.UsersContract;
 import com.epita.ElasticSearch.contracts.PostContractElasticSearch;
+import com.epita.contracts.BlocksUserContract;
 import com.epita.contracts.LikesContract;
 import com.oracle.svm.core.annotate.Delete;
 
@@ -87,6 +88,13 @@ public class ElasticSearchRestClient {
         );
     }
 
+    public void create_blocked_users() throws IOException {
+        // Crée un index avec un analyzer personnalisé
+        CreateIndexResponse createIndexResponse = elasticsearchClient.indices().create(c -> c
+            .index("blocked_users")
+        );
+    }
+
     public void insert_post(PostsContract postContract) throws IOException {
         PostContractElasticSearch postContract2 = postContractElasticSearch.fromPostsContract(postContract);
         IndexRequest<PostContractElasticSearch> request = IndexRequest.of(  
@@ -121,10 +129,24 @@ public class ElasticSearchRestClient {
                 .document(likesContract)); 
         elasticsearchClient.index(request);  
     }
+
+    public void insert_blocked_users(BlocksUserContract blocksUserContract) throws IOException {
+        IndexRequest<BlocksUserContract> request = IndexRequest.of(  
+            b -> b.index("blocked_users")
+                .id(blocksUserContract.getId().toString())
+                .document(blocksUserContract)); 
+        elasticsearchClient.index(request);  
+    }
+
     public String delete_by_id(String name, UUID userId) throws IOException {
         DeleteRequest searchRequest = DeleteRequest.of( b -> b.index(name).id(userId.toString()));
         String searchResponse = elasticsearchClient.delete(searchRequest).result().toString();
         return "Deleted";
+    }
+    public List<BlocksUserContract> search_blocked_from_blocker_id(UUID blockerId) throws IOException {
+        SearchRequest searchRequest = SearchRequest.of( b -> b.index("blocked_users").query(QueryBuilders.matchPhrase().field("blockerId").query(blockerId.toString()).build()._toQuery()));
+        List<BlocksUserContract> searchResponse = elasticsearchClient.search(searchRequest, BlocksUserContract.class).hits().hits().stream().map(hit -> hit.source()).collect(java.util.stream.Collectors.toList());
+        return searchResponse;
     }
     public List<UsersContract> search_user_by_id(UUID userId) throws IOException {
         SearchRequest searchRequest = SearchRequest.of( b -> b.index("users").query(QueryBuilders.matchPhrase().field("userId").query(userId.toString()).build()._toQuery()));
@@ -157,9 +179,13 @@ public class ElasticSearchRestClient {
         return elasticsearchClient.count(c -> c.index("likes").query(QueryBuilders.match().field("postId").query(postId.toString()).build()._toQuery())).count();
     }
 
-    public List<PostContractElasticSearch> search_all(String content, List<String> hashtags, List<UUID> userIDs) throws IOException {
+    public List<PostContractElasticSearch> search_all(String content, List<String> hashtags, List<UUID> userIDs, List<BlocksUserContract> blocks) throws IOException {
         List<Query> must_queries = new ArrayList<>();
         List<Query> should_queries = new ArrayList<>();
+        List<Query> must_not_queries = new ArrayList<>();
+        for (BlocksUserContract block: blocks) {
+            must_not_queries.add(QueryBuilders.match().field("authorId").query(block.getBlockedId().toString()).build()._toQuery());
+        }
         for (String hashtag: hashtags) {
             should_queries.add(QueryBuilders.match().field("hashtags").query(hashtag).analyzer("posts_analyzer").fuzziness("AUTO").build()._toQuery());
         }
@@ -167,7 +193,7 @@ public class ElasticSearchRestClient {
             should_queries.add(QueryBuilders.match().field("authorId").query(userID.toString()).build()._toQuery());
         }
         should_queries.add(QueryBuilders.match().field("content").query(content).analyzer("posts_analyzer").fuzziness("AUTO").build()._toQuery());
-        SearchRequest searchRequest = SearchRequest.of( b -> b.index("posts").query(QueryBuilders.bool().should(should_queries).must(must_queries).build()._toQuery()).sort(s -> s.field(f -> f
+        SearchRequest searchRequest = SearchRequest.of( b -> b.index("posts").query(QueryBuilders.bool().should(should_queries).must(must_queries).mustNot(must_not_queries).build()._toQuery()).sort(s -> s.field(f -> f
             .field("likesNumber")
             .order(co.elastic.clients.elasticsearch._types.SortOrder.Desc)
         )));
