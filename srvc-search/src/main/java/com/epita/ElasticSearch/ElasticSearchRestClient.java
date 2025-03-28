@@ -168,8 +168,8 @@ public class ElasticSearchRestClient {
         }
         should_queries.add(QueryBuilders.match().field("content").query(content).analyzer("posts_analyzer").fuzziness("AUTO").build()._toQuery());
         SearchRequest searchRequest = SearchRequest.of( b -> b.index("posts").query(QueryBuilders.bool().should(should_queries).must(must_queries).build()._toQuery()).sort(s -> s.field(f -> f
-        .field("likesNumber")
-        .order(co.elastic.clients.elasticsearch._types.SortOrder.Desc)
+            .field("likesNumber")
+            .order(co.elastic.clients.elasticsearch._types.SortOrder.Desc)
         )));
         List<PostContractElasticSearch> searchResponse = elasticsearchClient.search(searchRequest, PostContractElasticSearch.class).hits().hits().stream().map(hit -> hit.source()).collect(java.util.stream.Collectors.toList());
         return searchResponse;
