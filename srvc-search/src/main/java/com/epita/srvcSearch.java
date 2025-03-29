@@ -146,6 +146,11 @@ public class srvcSearch {
         String content = SearchService.remove_hashtags(search_message);
         List<UUID> users_name = new ArrayList<>();
         try {
+
+            if (!elasticSearchReastClient.indexExists("blocked_users"))
+            {
+                elasticSearchReastClient.create_blocked_users();
+            }
             blocks = elasticSearchReastClient.search_blocked_from_blocker_id(searching_struct.getSearcher_id());
 
             for (String word: search_message.split(" ")) {

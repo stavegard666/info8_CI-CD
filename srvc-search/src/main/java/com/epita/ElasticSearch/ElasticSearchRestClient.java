@@ -34,6 +34,10 @@ import co.elastic.clients.elasticsearch.ElasticsearchAsyncClient;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.analysis.Analyzer;
 import co.elastic.clients.elasticsearch._types.analysis.AnalyzerVariant;
+import co.elastic.clients.elasticsearch._types.query_dsl.FieldValueFactorModifier;
+import co.elastic.clients.elasticsearch._types.query_dsl.FieldValueFactorScoreFunction;
+import co.elastic.clients.elasticsearch._types.query_dsl.FunctionScore;
+import co.elastic.clients.elasticsearch._types.query_dsl.FunctionScoreQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.elasticsearch._types.query_dsl.QueryBuilders;
 
@@ -193,10 +197,8 @@ public class ElasticSearchRestClient {
             should_queries.add(QueryBuilders.match().field("authorId").query(userID.toString()).build()._toQuery());
         }
         should_queries.add(QueryBuilders.match().field("content").query(content).analyzer("posts_analyzer").fuzziness("AUTO").build()._toQuery());
-        SearchRequest searchRequest = SearchRequest.of( b -> b.index("posts").query(QueryBuilders.bool().should(should_queries).must(must_queries).mustNot(must_not_queries).build()._toQuery()).sort(s -> s.field(f -> f
-            .field("likesNumber")
-            .order(co.elastic.clients.elasticsearch._types.SortOrder.Desc)
-        )));
+        should_queries.add(QueryBuilders.functionScore(f -> f.functions(f2 -> f2.fieldValueFactor(f3 -> f3.field("likesNumber").factor(1.0).modifier(FieldValueFactorModifier.Log1p)))));
+        SearchRequest searchRequest = SearchRequest.of( b -> b.index("posts").query(QueryBuilders.bool().should(should_queries).must(must_queries).mustNot(must_not_queries).build()._toQuery()));
         List<PostContractElasticSearch> searchResponse = elasticsearchClient.search(searchRequest, PostContractElasticSearch.class).hits().hits().stream().map(hit -> hit.source()).collect(java.util.stream.Collectors.toList());
         return searchResponse;
     }
